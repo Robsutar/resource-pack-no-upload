@@ -2,7 +2,7 @@ package com.robsutar.rnu;
 
 import org.bukkit.plugin.java.JavaPlugin;
 
-public final class ResourcepackNoUpload extends JavaPlugin {
+public final class ResourcePackNoUpload extends JavaPlugin {
 
     @Override
     public void onEnable() {
