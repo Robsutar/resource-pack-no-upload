@@ -6,6 +6,7 @@ dependency-reduced-pom.xml
 
 ### IntelliJ IDEA ###
 .idea
+ResourcepackNoUpload.iml
 
 ### Eclipse ###
 .apt_generated
