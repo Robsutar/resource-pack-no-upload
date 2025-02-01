@@ -2,6 +2,10 @@
 # This field has no default value, manual set is required.
 port:
 
+# Provides the address start for address for the resourcepack.
+# If this is field is blank, it will use defined ip in server.properties, or the program ipv4.
+serverAddress:
+
 # Message sent to the players when sending the resourcepack
 prompt: "<bold>Accept</bold> our resourcepack to have the <gold>right</gold> server experience!"
 
