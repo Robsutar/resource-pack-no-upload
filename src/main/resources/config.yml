@@ -1,0 +1,19 @@
+# This port needs to be open to the players
+# This field has no default value, manual set is required.
+port:
+
+# Message sent to the players when sending the resourcepack
+prompt: "<bold>Accept</bold> our resourcepack to have the <gold>right</gold> server experience!"
+
+# Kicks the players if they refuse the resourcepack.
+# Leave this field blank to avoid kick.
+kickOnRefuseMessage: |
+  <red>Resource pack refused.</red> If you didn't mean to, go to your server list,edit that server,
+  and change the <aqua>`Server Resource Packs`</aqua> option to <gold>`Enabled`</gold>.
+
+# Kicks ths players if they had problems downloading the resourcepack.
+# This is generally a server problem.
+# Leave this field blank to avoid kick.
+kickOnFailMessage: |
+  <red>Failed to download resource pack</red>, error code: <gold><error_code></gold>.
+  
