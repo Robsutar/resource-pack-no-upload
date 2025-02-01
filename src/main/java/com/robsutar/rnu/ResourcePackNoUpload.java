@@ -1,17 +1,20 @@
 package com.robsutar.rnu;
 
+import net.kyori.adventure.resource.ResourcePackInfo;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.Nullable;
 
 public final class ResourcePackNoUpload extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        // Plugin startup logic
+    }
+
+    public RNUConfig config() {
 
     }
 
-    @Override
-    public void onDisable() {
-        // Plugin shutdown logic
+    public @Nullable ResourcePackInfo actualResourcePackInfo() {
+
     }
 }
