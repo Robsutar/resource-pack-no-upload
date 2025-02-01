@@ -1,0 +1,4 @@
+name: ResourcepackNoUpload
+version: '0.0.1'
+main: com.robsutar.rnu.ResourcepackNoUpload
+api-version: '1.21'
