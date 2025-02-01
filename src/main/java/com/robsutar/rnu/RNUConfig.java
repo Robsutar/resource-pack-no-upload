@@ -14,7 +14,8 @@ import java.util.Objects;
 public record RNUConfig(InetSocketAddress address,
                         Component prompt,
                         @Nullable Component kickOnRefuseMessage,
-                        @Nullable Component kickOnFailMessage) {
+                        @Nullable Component kickOnFailMessage,
+                        ResourcePackLoader loader) {
     public static RNUConfig deserialize(ConfigurationSection raw) throws IllegalArgumentException {
         var mm = MiniMessage.miniMessage();
 
@@ -47,7 +48,8 @@ public record RNUConfig(InetSocketAddress address,
                 new InetSocketAddress(addressStr, port),
                 mm.deserialize(Objects.requireNonNull(raw.getString("prompt"))),
                 raw.get("kickOnRefuseMessage") instanceof String s1 ? mm.deserialize(s1) : null,
-                raw.get("kickOnFailMessage") instanceof String s1 ? mm.deserialize(s1) : null
+                raw.get("kickOnFailMessage") instanceof String s1 ? mm.deserialize(s1) : null,
+                ResourcePackLoader.deserialize(Objects.requireNonNull(raw.getConfigurationSection("loader")))
         );
     }
 }

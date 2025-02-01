@@ -20,4 +20,14 @@ kickOnRefuseMessage: |
 # Leave this field blank to avoid kick.
 kickOnFailMessage: |
   <red>Failed to download resource pack</red>, error code: <gold><error_code></gold>.
-  
+
+# The texture pack loader, called every time that the resource pack is loaded by the plugin.
+# Each type has their own fields.
+# If any error occurs while running the loader, the resource pack sending will be disabled, waiting to another reload
+# to try load the resource pack again.
+loader:
+  # Example for `Manual` type, it uses an existing folder of any provided path.
+  # If there is no `pack.mcmeta` in this folder, an error will be thrown.
+  type: Manual
+  # Relative to the server root folder.
+  folder: "plugins/ResourcePackLoader/Manual Pack/"
