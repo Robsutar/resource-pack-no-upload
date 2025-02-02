@@ -12,4 +12,8 @@ public interface ResourcePackState {
 
     class Loading implements ResourcePackState {
     }
+
+    record LoadedPendingProvider(Loaded loaded) implements ResourcePackState {
+
+    }
 }

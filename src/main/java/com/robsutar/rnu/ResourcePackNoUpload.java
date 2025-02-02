@@ -1,5 +1,7 @@
 package com.robsutar.rnu;
 
+import com.robsutar.rnu.paper.PaperListener;
+import com.robsutar.rnu.paper.RNUPackLoadedEvent;
 import net.kyori.adventure.resource.ResourcePackInfo;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.InvalidConfigurationException;
@@ -11,24 +13,21 @@ import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.UUID;
-import java.util.logging.Level;
 
 public final class ResourcePackNoUpload extends JavaPlugin {
     private RNUConfig config;
-    private ResourcePackState resourcePackState = new ResourcePackState.Loading();
+    private ResourcePackState resourcePackState = new ResourcePackState.FailedToLoad();
 
     @Override
     public void onEnable() {
+        ResourcePackState.Loaded loaded;
         try {
-            load();
+            loaded = load();
+            resourcePackState = new ResourcePackState.LoadedPendingProvider(loaded);
         } catch (ResourcePackLoadException e) {
-            if (config == null) {
-                throw new RuntimeException("""
-                        Initial loading failed, and the initial configuration could not be loaded, disabling plugin.
-                        """, e);
-            } else {
-                getLogger().log(Level.SEVERE, e, () -> "Failed to apply resource pack loader, fix the problems, and try load it again with `/rsu reload`.");
-            }
+            throw new RuntimeException("""
+                    Initial loading failed, and the initial configuration could not be loaded, disabling plugin.
+                    """, e);
         }
 
         Bukkit.getPluginManager().registerEvents(new PaperListener(this), this);
@@ -40,14 +39,18 @@ public final class ResourcePackNoUpload extends JavaPlugin {
                     public ResourcePackState state() {
                         return resourcePackState;
                     }
-                }.run();
+                }.run(() -> Bukkit.getScheduler().runTask(this, () -> {
+                    resourcePackState = loaded;
+                    getLogger().info("Resource pack provider bind address: " + config.address());
+                    getLogger().info("Resource pack provider bind uri: " + config.uri());
+                }));
             } catch (Exception e) {
                 throw new IllegalStateException("Failed to bind texture provider bytes", e);
             }
         });
     }
 
-    public void load() throws ResourcePackLoadException {
+    public ResourcePackState.Loaded load() throws ResourcePackLoadException {
         try {
             if (resourcePackState instanceof ResourcePackState.Loading)
                 throw new ResourcePackLoadException("Already loading");
@@ -90,7 +93,12 @@ public final class ResourcePackNoUpload extends JavaPlugin {
 
             var resourcePackInfo = ResourcePackInfo.resourcePackInfo(UUID.randomUUID(), config().uri(), hashStr);
 
-            resourcePackState = new ResourcePackState.Loaded(resourcePackInfo, bytes);
+            var newState = new ResourcePackState.Loaded(resourcePackInfo, bytes);
+            resourcePackState = newState;
+
+            Bukkit.getPluginManager().callEvent(new RNUPackLoadedEvent(resourcePackInfo));
+
+            return newState;
         } catch (ResourcePackLoadException e) {
             resourcePackState = new ResourcePackState.FailedToLoad();
             throw e;

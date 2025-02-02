@@ -18,7 +18,7 @@ public abstract class TextureProviderBytes {
 
     public abstract ResourcePackState state();
 
-    public void run() throws Exception {
+    public void run(Runnable beforeLock) throws Exception {
         var bossGroup = new NioEventLoopGroup();
         var workerGroup = new NioEventLoopGroup(1);
         try {
@@ -50,6 +50,9 @@ public abstract class TextureProviderBytes {
                     });
 
             var ch = b.bind(address).sync().channel();
+
+            beforeLock.run();
+
             ch.closeFuture().sync();
         } finally {
             bossGroup.shutdownGracefully();
