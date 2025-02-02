@@ -4,18 +4,15 @@ import com.robsutar.rnu.ResourcePackNoUpload;
 import com.robsutar.rnu.ResourcePackState;
 import net.kyori.adventure.resource.ResourcePackInfo;
 import net.kyori.adventure.resource.ResourcePackRequest;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
-
-import java.util.HashSet;
 
 public class PaperListener implements Listener {
     private final ResourcePackNoUpload plugin;
-    private final HashSet<Player> pendingToSend = new HashSet<>();
 
     public PaperListener(ResourcePackNoUpload plugin) {
         this.plugin = plugin;
@@ -61,24 +58,14 @@ public class PaperListener implements Listener {
 
         if (plugin.resourcePackState() instanceof ResourcePackState.Loaded loaded) {
             sendPack(player, loaded.resourcePackInfo());
-        } else {
-            pendingToSend.add(player);
         }
-
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onPlayerQuit(PlayerQuitEvent event) {
-        pendingToSend.remove(event.getPlayer());
     }
 
     @EventHandler
     public void onRNUPackLoaded(RNUPackLoadedEvent event) {
         var resourcePackInfo = event.getResourcePackInfo();
-        for (var pending : pendingToSend) {
+        for (var pending : Bukkit.getOnlinePlayers()) {
             sendPack(pending, resourcePackInfo);
         }
-
-        pendingToSend.clear();
     }
 }
