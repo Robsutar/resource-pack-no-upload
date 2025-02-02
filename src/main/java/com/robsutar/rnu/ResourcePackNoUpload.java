@@ -31,6 +31,8 @@ public final class ResourcePackNoUpload extends JavaPlugin {
             }
         }
 
+        Bukkit.getPluginManager().registerEvents(new PaperListener(this), this);
+
         Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
             try {
                 new TextureProviderBytes(config.address()) {
