@@ -6,7 +6,7 @@
 
     <groupId>com.robsutar</groupId>
     <artifactId>ResourcePackNoUpload</artifactId>
-    <version>0.0.1</version>
+    <version>1.0.0</version>
     <packaging>jar</packaging>
 
     <name>ResourcePackNoUpload</name>
