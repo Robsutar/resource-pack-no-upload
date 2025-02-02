@@ -1,6 +1,7 @@
 package com.robsutar.rnu;
 
 import com.robsutar.rnu.paper.PaperListener;
+import com.robsutar.rnu.paper.RNUCommand;
 import com.robsutar.rnu.paper.RNUPackLoadedEvent;
 import net.kyori.adventure.resource.ResourcePackInfo;
 import org.bukkit.Bukkit;
@@ -12,6 +13,7 @@ import java.io.File;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Objects;
 import java.util.UUID;
 
 public final class ResourcePackNoUpload extends JavaPlugin {
@@ -31,6 +33,7 @@ public final class ResourcePackNoUpload extends JavaPlugin {
         }
 
         Bukkit.getPluginManager().registerEvents(new PaperListener(this), this);
+        Objects.requireNonNull(getCommand("resourcepacknoupload")).setExecutor(new RNUCommand(this));
 
         Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
             try {

@@ -4,3 +4,10 @@ main: com.robsutar.rnu.ResourcePackNoUpload
 api-version: '1.21'
 description: Send your resource pack, without uploading it
 authors: [ Robsutar ]
+
+commands:
+  resourcepacknoupload:
+    usage: "rnu reload"
+    permission: "resourcepacknoupload.admin"
+    aliases: [ "rnu" ]
+    description: "Used to reload the plugin configuration and apply the loader again."
