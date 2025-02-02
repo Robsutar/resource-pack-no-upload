@@ -1,6 +1,7 @@
 package com.robsutar.rnu.paper;
 
 import com.robsutar.rnu.ResourcePackNoUpload;
+import com.robsutar.rnu.ResourcePackState;
 import net.kyori.adventure.resource.ResourcePackInfo;
 import net.kyori.adventure.resource.ResourcePackRequest;
 import org.bukkit.entity.Player;
@@ -58,13 +59,12 @@ public class PaperListener implements Listener {
     public void onPlayerJoin(PlayerJoinEvent event) {
         var player = event.getPlayer();
 
-        var resourcePackInfo = plugin.actualResourcePackInfo();
-        if (resourcePackInfo == null) {
+        if (plugin.resourcePackState() instanceof ResourcePackState.Loaded loaded) {
+            sendPack(player, loaded.resourcePackInfo());
+        } else {
             pendingToSend.add(player);
-            return;
         }
 
-        sendPack(player, resourcePackInfo);
     }
 
     @EventHandler(priority = EventPriority.MONITOR)

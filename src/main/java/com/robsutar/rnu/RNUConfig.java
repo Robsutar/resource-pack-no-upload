@@ -8,10 +8,12 @@ import org.jetbrains.annotations.Nullable;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.URI;
 import java.net.UnknownHostException;
 import java.util.Objects;
 
 public record RNUConfig(InetSocketAddress address,
+                        URI uri,
                         Component prompt,
                         @Nullable Component kickOnRefuseMessage,
                         @Nullable Component kickOnFailMessage,
@@ -46,6 +48,7 @@ public record RNUConfig(InetSocketAddress address,
 
         return new RNUConfig(
                 new InetSocketAddress(addressStr, port),
+                URI.create("http://" + addressStr + ":" + port),
                 mm.deserialize(Objects.requireNonNull(raw.getString("prompt"))),
                 raw.get("kickOnRefuseMessage") instanceof String s1 ? mm.deserialize(s1) : null,
                 raw.get("kickOnFailMessage") instanceof String s1 ? mm.deserialize(s1) : null,
