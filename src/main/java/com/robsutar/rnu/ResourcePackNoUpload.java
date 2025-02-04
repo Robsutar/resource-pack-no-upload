@@ -73,7 +73,11 @@ public final class ResourcePackNoUpload extends JavaPlugin {
             } catch (IOException | InvalidConfigurationException e) {
                 throw new ResourcePackLoadException("Failed to load configuration file");
             }
-            config = RNUConfig.deserialize(configRaw);
+            try {
+                config = RNUConfig.deserialize(configRaw);
+            } catch (Exception e) {
+                throw new ResourcePackLoadException("Failed to deserialize configuration from file");
+            }
 
             byte[] bytes;
             try {
