@@ -26,8 +26,31 @@ kickOnFailMessage: |
 # If any error occurs while running the loader, the resource pack sending will be disabled, waiting to another reload
 # to try load the resource pack again.
 loader:
-  # Example for `Manual` type, it uses an existing folder of any provided path.
-  # If there is no `pack.mcmeta` in this folder, an error will be thrown.
+  ### === Example for `Manual` type. ===
+
+  ### It uses an existing folder of any provided path.
   type: Manual
-  # Relative to the server root folder.
+
+  ### Relative to the server root folder.
   folder: "plugins/ResourcePackLoader/Manual Pack/"
+
+  ### === End of `Manual` type example.
+
+
+
+  ### === Example for `Merged` type. ===
+
+  ### It merges data from many types of loaders.
+  ### If there is some error in any loader apply, an error will be thrown.
+  # type: Merged
+
+  ### This is a list, for each entry you need to specify the values of the desired loader.
+  ### See their how to configure each type in the examples above.
+  ### For overriding cases, loaders on the top of the list have major priority, this is,
+  ### their files will replace the other files, and a log in console will be sent.
+  # loaders:
+  #   - type: Manual
+  #     folder: "plugins/ResourcePackNoUpload/Manual Pack/"
+  #   - type: Manual
+  #     folder: "plugins/ModelEngine/resource pack/"
+  ### === End of `Merged` type example.
