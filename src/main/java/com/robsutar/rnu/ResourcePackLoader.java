@@ -5,33 +5,26 @@ import org.bukkit.configuration.ConfigurationSection;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 public interface ResourcePackLoader {
-    Map<String, File> appendFiles() throws Exception;
+    Map<String, Consumer<ZipOutputStream>> appendFiles() throws Exception;
 
     default byte[] load() throws Exception {
         try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream(); ZipOutputStream zipOut = new ZipOutputStream(byteOut)) {
-            Map<String, File> appended = appendFiles();
+            Map<String, Consumer<ZipOutputStream>> appended = appendFiles();
 
-            for (Map.Entry<String, File> entry : appended.entrySet()) {
-                File file = entry.getValue();
+            for (Map.Entry<String, Consumer<ZipOutputStream>> entry : appended.entrySet()) {
+                Consumer<ZipOutputStream> writer = entry.getValue();
                 String name = entry.getKey();
-                if (!file.isFile()) throw new IllegalArgumentException();
 
-                FileInputStream fileIn = new FileInputStream(file);
                 ZipEntry zipEntry = new ZipEntry(name);
                 zipOut.putNextEntry(zipEntry);
-
-                byte[] buffer = new byte[1024];
-                int len;
-                while ((len = fileIn.read(buffer)) > 0) {
-                    zipOut.write(buffer, 0, len);
-                }
-
-                fileIn.close();
+                writer.accept(zipOut);
             }
 
             zipOut.close();
@@ -61,21 +54,31 @@ public interface ResourcePackLoader {
         }
 
         @Override
-        public Map<String, File> appendFiles() throws Exception {
+        public Map<String, Consumer<ZipOutputStream>> appendFiles() throws Exception {
             if (!folder.exists()) throw new Exception("Directory not found: " + folder);
             if (!folder.isDirectory()) throw new Exception("File is not directory: " + folder);
 
-            HashMap<String, File> output = new HashMap<String, File>();
+            HashMap<String, Consumer<ZipOutputStream>> output = new HashMap<>();
             appendDirectory(output, folder, "");
             return output;
         }
 
-        private static void appendDirectory(Map<String, File> output, File directory, String parentPath) {
+        private static void appendDirectory(Map<String, Consumer<ZipOutputStream>> output, File directory, String parentPath) {
             File[] files = directory.listFiles();
             if (files != null) {
                 for (File file : files) {
                     if (file.isFile()) {
-                        output.put(parentPath + file.getName(), file);
+                        output.put(parentPath + file.getName(), (zipOut) -> {
+                            try (FileInputStream fileIn = new FileInputStream(file)) {
+                                byte[] buffer = new byte[1024];
+                                int len;
+                                while ((len = fileIn.read(buffer)) > 0) {
+                                    zipOut.write(buffer, 0, len);
+                                }
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
                     } else if (file.isDirectory()) {
                         appendDirectory(output, file, parentPath + file.getName() + "/");
                     }
@@ -96,8 +99,8 @@ public interface ResourcePackLoader {
         }
 
         @Override
-        public Map<String, File> appendFiles() throws Exception {
-            HashMap<String, File> output = new HashMap<String, File>();
+        public Map<String, Consumer<ZipOutputStream>> appendFiles() throws Exception {
+            HashMap<String, Consumer<ZipOutputStream>> output = new HashMap<>();
             for (int i = loaders.size() - 1; i >= 0; i--) {
                 ResourcePackLoader loader = loaders.get(i);
                 output.putAll(loader.appendFiles());
