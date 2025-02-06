@@ -34,18 +34,21 @@ public abstract class TextureProviderBytes {
                             ch.pipeline().addLast(new SimpleChannelInboundHandler<FullHttpRequest>() {
                                 @Override
                                 protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest msg) {
-                                    ResourcePackState state = state();
-                                    if (state instanceof ResourcePackState.Loaded) {
-                                        ResourcePackState.Loaded loaded = (ResourcePackState.Loaded) state;
-                                        byte[] bytes = loaded.bytes();
-                                        ByteBuf content = Unpooled.wrappedBuffer(bytes);
-                                        DefaultFullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, content);
-                                        response.headers().set(HttpHeaderNames.CONTENT_TYPE, "application/zip");
-                                        response.headers().set(HttpHeaderNames.CONTENT_LENGTH, bytes.length);
-                                        ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
-                                    } else {
-                                        ctx.writeAndFlush(new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NOT_FOUND))
-                                                .addListener(ChannelFutureListener.CLOSE);
+                                    try {
+                                        ResourcePackState state = state();
+                                        if (state instanceof ResourcePackState.Loaded) {
+                                            ResourcePackState.Loaded loaded = (ResourcePackState.Loaded) state;
+                                            byte[] bytes = loaded.bytes();
+                                            ByteBuf content = Unpooled.wrappedBuffer(bytes);
+                                            DefaultFullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, content);
+                                            response.headers().set(HttpHeaderNames.CONTENT_TYPE, "application/zip");
+                                            response.headers().set(HttpHeaderNames.CONTENT_LENGTH, bytes.length);
+                                            ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+                                        } else {
+                                            ctx.writeAndFlush(new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NOT_FOUND))
+                                                    .addListener(ChannelFutureListener.CLOSE);
+                                        }
+                                    } catch (Exception ignored) {
                                     }
                                 }
                             });
