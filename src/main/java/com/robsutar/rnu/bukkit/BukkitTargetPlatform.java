@@ -19,7 +19,7 @@ public class BukkitTargetPlatform implements TargetPlatform {
     public BukkitTargetPlatform(JavaPlugin plugin) {
         this.plugin = plugin;
 
-        String setResourcePackError = "Target platform unrecognized method " + plugin.getName() + " is outdated?";
+        String setResourcePackError = "Target platform failed method call. Is " + plugin.getName() + " outdated?";
         Class<Player> pClass = Player.class;
         BiConsumer<Player, ResourcePackInfo> setResourcePackFunction;
         try {

@@ -61,7 +61,7 @@ public class BukkitListener implements Listener {
                     break;
                 default:
                     throw new IllegalStateException(
-                            "Invalid state, " + plugin.getName() + " is outdated?"
+                            "Invalid state. Is " + plugin.getName() + " outdated?"
                     );
             }
         });
