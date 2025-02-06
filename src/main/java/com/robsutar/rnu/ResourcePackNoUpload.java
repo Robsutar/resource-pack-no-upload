@@ -18,12 +18,15 @@ import java.util.UUID;
 
 public final class ResourcePackNoUpload extends JavaPlugin {
     private TargetPlatform targetPlatform;
+    private TextureProviderBytes textureProviderBytes;
     private RNUConfig config;
     private ResourcePackState resourcePackState = new ResourcePackState.FailedToLoad();
 
     @Override
     public void onEnable() {
         targetPlatform = new BukkitTargetPlatform(this);
+
+        textureProviderBytes = loadTextureProviderBytes();
 
         ResourcePackState.Loaded loaded;
         try {
@@ -36,17 +39,13 @@ public final class ResourcePackNoUpload extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new BukkitListener(this), this);
         Objects.requireNonNull(getCommand("resourcepacknoupload")).setExecutor(new RNUCommand(this));
 
+
         Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
             try {
-                new TextureProviderBytes(config.address()) {
-                    @Override
-                    public ResourcePackState state() {
-                        return resourcePackState;
-                    }
-                }.run(() -> Bukkit.getScheduler().runTask(this, () -> {
+                textureProviderBytes.run(() -> Bukkit.getScheduler().runTask(this, () -> {
                     resourcePackState = loaded;
-                    getLogger().info("Resource pack provider bind address: " + config.address());
-                    getLogger().info("Resource pack provider bind uri: " + config.uri());
+                    getLogger().info("Resource pack provider bind address: " + textureProviderBytes.address());
+                    getLogger().info("Resource pack provider bind uri: " + textureProviderBytes.uri());
                 }));
             } catch (Exception e) {
                 throw new IllegalStateException("Failed to bind texture provider bytes", e);
@@ -96,7 +95,7 @@ public final class ResourcePackNoUpload extends JavaPlugin {
 
             ResourcePackInfo resourcePackInfo = new ResourcePackInfo(
                     UUID.randomUUID(),
-                    config().uri().toString(),
+                    textureProviderBytes.uri().toString(),
                     hash,
                     config.prompt()
             );
@@ -118,6 +117,10 @@ public final class ResourcePackNoUpload extends JavaPlugin {
 
     public TargetPlatform targetPlatform() {
         return targetPlatform;
+    }
+
+    public TextureProviderBytes textureProviderBytes() {
+        return textureProviderBytes;
     }
 
     public RNUConfig config() {

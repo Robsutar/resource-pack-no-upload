@@ -9,12 +9,23 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.http.*;
 
 import java.net.InetSocketAddress;
+import java.net.URI;
 
 public abstract class TextureProviderBytes {
     private final InetSocketAddress address;
+    private final URI uri;
 
-    public TextureProviderBytes(InetSocketAddress address) {
-        this.address = address;
+    public TextureProviderBytes(String addressStr, int port) {
+        address = new InetSocketAddress(addressStr, port);
+        uri = URI.create("http://" + addressStr + ":" + port);
+    }
+
+    public InetSocketAddress address() {
+        return address;
+    }
+
+    public URI uri() {
+        return uri;
     }
 
     public abstract ResourcePackState state();
