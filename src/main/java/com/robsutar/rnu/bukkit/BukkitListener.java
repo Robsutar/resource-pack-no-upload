@@ -19,68 +19,59 @@ public class BukkitListener implements Listener {
         this.plugin = plugin;
     }
 
-    private void sendPack(Player player, ResourcePackInfo resourcePackInfo) {
-        player.setResourcePack(resourcePackInfo.uri().toString(), resourcePackInfo.hash());
-//        player.setResourcePack(
-//                resourcePackInfo.id(),
-//                resourcePackInfo.uri().toString(),
-//                resourcePackInfo.hash(),
-//                plugin.config().prompt(),
-//                false
-//        );
-    }
-
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
 
         if (plugin.resourcePackState() instanceof ResourcePackState.Loaded) {
             ResourcePackState.Loaded loaded = (ResourcePackState.Loaded) plugin.resourcePackState();
-            sendPack(player, loaded.resourcePackInfo());
+            plugin.targetPlatform().setResourcePack(player, loaded.resourcePackInfo());
         }
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerResourcePackStatus(PlayerResourcePackStatusEvent event) {
-        RNUConfig config = plugin.config();
-        Player player = event.getPlayer();
-        PlayerResourcePackStatusEvent.Status status = event.getStatus();
+        plugin.targetPlatform().runSync(() -> {
+            RNUConfig config = plugin.config();
+            Player player = event.getPlayer();
+            PlayerResourcePackStatusEvent.Status status = event.getStatus();
 
-        switch (status.name()) {
-            // Intermediates called here.
-            case "ACCEPTED":
-            case "DOWNLOADED":
-                break;
-            case "DECLINED": {
-                if (config.kickOnRefuseMessage() != null) {
-                    player.kickPlayer(config.kickOnRefuseMessage());
+            switch (status.name()) {
+                // Intermediates called here.
+                case "ACCEPTED":
+                case "DOWNLOADED":
+                    break;
+                case "DECLINED": {
+                    if (config.kickOnRefuseMessage() != null) {
+                        player.kickPlayer(config.kickOnRefuseMessage());
+                    }
+                    break;
                 }
-                break;
-            }
-            case "INVALID_URL":
-            case "FAILED_DOWNLOAD":
-            case "FAILED_RELOAD":
-            case "DISCARDED": {
-                if (config.kickOnFailMessage() != null) {
-                    player.kickPlayer(config.kickOnFailMessage().replace("<error_code>", status.name()));
+                case "INVALID_URL":
+                case "FAILED_DOWNLOAD":
+                case "FAILED_RELOAD":
+                case "DISCARDED": {
+                    if (config.kickOnFailMessage() != null) {
+                        player.kickPlayer(config.kickOnFailMessage().replace("<error_code>", status.name()));
+                    }
+                    break;
                 }
-                break;
+                case "SUCCESSFULLY_LOADED":
+                    // All ok.
+                    break;
+                default:
+                    throw new IllegalStateException(
+                            "Invalid state, " + plugin.getName() + " is outdated?"
+                    );
             }
-            case "SUCCESSFULLY_LOADED":
-                // All ok.
-                break;
-            default:
-                throw new IllegalStateException(
-                        "Invalid state, " + plugin.getName() + " is outdated?"
-                );
-        }
+        });
     }
 
     @EventHandler
     public void onRNUPackLoaded(RNUPackLoadedEvent event) {
         ResourcePackInfo resourcePackInfo = event.getResourcePackInfo();
         for (Player pending : Bukkit.getOnlinePlayers()) {
-            sendPack(pending, resourcePackInfo);
+            plugin.targetPlatform().setResourcePack(pending, resourcePackInfo);
         }
     }
 }

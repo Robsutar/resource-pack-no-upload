@@ -1,6 +1,7 @@
 package com.robsutar.rnu;
 
 import com.robsutar.rnu.bukkit.BukkitListener;
+import com.robsutar.rnu.bukkit.BukkitTargetPlatform;
 import com.robsutar.rnu.bukkit.RNUCommand;
 import com.robsutar.rnu.bukkit.RNUPackLoadedEvent;
 import org.bukkit.Bukkit;
@@ -16,11 +17,14 @@ import java.util.Objects;
 import java.util.UUID;
 
 public final class ResourcePackNoUpload extends JavaPlugin {
+    private TargetPlatform targetPlatform;
     private RNUConfig config;
     private ResourcePackState resourcePackState = new ResourcePackState.FailedToLoad();
 
     @Override
     public void onEnable() {
+        targetPlatform = new BukkitTargetPlatform(this);
+
         ResourcePackState.Loaded loaded;
         try {
             loaded = load();
@@ -115,6 +119,10 @@ public final class ResourcePackNoUpload extends JavaPlugin {
             resourcePackState = new ResourcePackState.FailedToLoad();
             throw new ResourcePackLoadException("Unexpected and unknown error", e);
         }
+    }
+
+    public TargetPlatform targetPlatform() {
+        return targetPlatform;
     }
 
     public RNUConfig config() {
