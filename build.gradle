@@ -5,16 +5,18 @@ plugins {
 
 group = 'com.robsutar.rnu'
 version = '1.1.0'
+def aaaaaaaaaa = group
 
-compileJava.options.encoding = "UTF-8"
+compileJava.options.encoding = 'UTF-8'
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
 }
 
 repositories {
     mavenCentral()
+
     maven {
         name 'papermc'
         url 'https://repo.papermc.io/repository/maven-public/'
@@ -23,7 +25,10 @@ repositories {
 
 dependencies {
     implementation 'io.netty:netty-all:4.1.115.Final'
-    compileOnly 'io.papermc.paper:paper-api:1.21.1-R0.1-SNAPSHOT'
+    compileOnly 'org.jetbrains:annotations:23.0.0'
+    // Paper is used just as transcriber of the bukkit classes, Paper classes are not used.
+    // Version 1.15.2 is used for the same reason, is just an transcriber, newer version classes are not used.
+    compileOnly 'com.destroystokyo.paper:paper-api:1.15.2-R0.1-SNAPSHOT'
 }
 
 processResources {
@@ -36,7 +41,7 @@ processResources {
 }
 
 shadowJar {
-    def shadowPath = group + '.shadow.'
+    def shadowPath = project.group.toString() + '.shadow.'
 
     archiveClassifier.set('')
     relocate 'io.netty', shadowPath + 'io.netty'

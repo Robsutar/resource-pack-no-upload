@@ -1,9 +1,9 @@
 package com.robsutar.rnu;
 
-import com.robsutar.rnu.paper.PaperListener;
-import com.robsutar.rnu.paper.RNUCommand;
-import com.robsutar.rnu.paper.RNUPackLoadedEvent;
-import net.kyori.adventure.resource.ResourcePackInfo;
+import com.robsutar.rnu.bukkit.BukkitListener;
+import com.robsutar.rnu.bukkit.BukkitTargetPlatform;
+import com.robsutar.rnu.bukkit.RNUCommand;
+import com.robsutar.rnu.bukkit.RNUPackLoadedEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -17,22 +17,23 @@ import java.util.Objects;
 import java.util.UUID;
 
 public final class ResourcePackNoUpload extends JavaPlugin {
+    private TargetPlatform targetPlatform;
     private RNUConfig config;
     private ResourcePackState resourcePackState = new ResourcePackState.FailedToLoad();
 
     @Override
     public void onEnable() {
+        targetPlatform = new BukkitTargetPlatform(this);
+
         ResourcePackState.Loaded loaded;
         try {
             loaded = load();
             resourcePackState = new ResourcePackState.LoadedPendingProvider(loaded);
         } catch (ResourcePackLoadException e) {
-            throw new RuntimeException("""
-                    Initial loading failed, and the initial configuration could not be loaded, disabling plugin.
-                    """, e);
+            throw new RuntimeException("Initial loading failed, and the initial configuration could not be loaded, disabling plugin.", e);
         }
 
-        Bukkit.getPluginManager().registerEvents(new PaperListener(this), this);
+        Bukkit.getPluginManager().registerEvents(new BukkitListener(this), this);
         Objects.requireNonNull(getCommand("resourcepacknoupload")).setExecutor(new RNUCommand(this));
 
         Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
@@ -59,12 +60,12 @@ public final class ResourcePackNoUpload extends JavaPlugin {
                 throw new ResourcePackLoadException("Already loading");
             resourcePackState = new ResourcePackState.Loading();
 
-            var folder = getDataFolder();
+            File folder = getDataFolder();
             if (!folder.exists() && !folder.mkdir())
                 throw new ResourcePackLoadException("Failed to create plugin folder");
 
-            var configRaw = new YamlConfiguration();
-            var configFile = new File(folder, "config.yml");
+            YamlConfiguration configRaw = new YamlConfiguration();
+            File configFile = new File(folder, "config.yml");
             if (!configFile.exists()) {
                 saveResource("config.yml", false);
             }
@@ -86,21 +87,21 @@ public final class ResourcePackNoUpload extends JavaPlugin {
                 throw new ResourcePackLoadException("Loader failed to load resource pack", e);
             }
 
-            String hashStr;
+            byte[] hash;
             try {
-                var hash = MessageDigest.getInstance("SHA-1").digest(bytes);
-                var sha1Hash = new StringBuilder();
-                for (var hashedByte : hash) {
-                    sha1Hash.append(Integer.toString((hashedByte & 0xff) + 0x100, 16).substring(1));
-                }
-                hashStr = sha1Hash.toString();
+                hash = MessageDigest.getInstance("SHA-1").digest(bytes);
             } catch (NoSuchAlgorithmException e) {
                 throw new ResourcePackLoadException("Failed to load SHA-1 algorithm to create texture hash.");
             }
 
-            var resourcePackInfo = ResourcePackInfo.resourcePackInfo(UUID.randomUUID(), config().uri(), hashStr);
+            ResourcePackInfo resourcePackInfo = new ResourcePackInfo(
+                    UUID.randomUUID(),
+                    config().uri().toString(),
+                    hash,
+                    config.prompt()
+            );
 
-            var newState = new ResourcePackState.Loaded(resourcePackInfo, bytes);
+            ResourcePackState.Loaded newState = new ResourcePackState.Loaded(resourcePackInfo, bytes);
             resourcePackState = newState;
 
             Bukkit.getPluginManager().callEvent(new RNUPackLoadedEvent(resourcePackInfo));
@@ -113,6 +114,10 @@ public final class ResourcePackNoUpload extends JavaPlugin {
             resourcePackState = new ResourcePackState.FailedToLoad();
             throw new ResourcePackLoadException("Unexpected and unknown error", e);
         }
+    }
+
+    public TargetPlatform targetPlatform() {
+        return targetPlatform;
     }
 
     public RNUConfig config() {

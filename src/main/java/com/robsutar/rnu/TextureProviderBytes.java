@@ -4,6 +4,7 @@ import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.http.*;
 
@@ -19,41 +20,63 @@ public abstract class TextureProviderBytes {
     public abstract ResourcePackState state();
 
     public void run(Runnable beforeLock) throws Exception {
-        var bossGroup = new NioEventLoopGroup();
-        var workerGroup = new NioEventLoopGroup(1);
+        EventLoopGroup bossGroup = new NioEventLoopGroup(1);
+        EventLoopGroup workerGroup = new NioEventLoopGroup();
+
         try {
-            var b = new ServerBootstrap();
-            b.group(bossGroup, workerGroup)
+            Channel b = new ServerBootstrap()
+                    .group(bossGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
-                    .childHandler(new ChannelInitializer<>() {
+                    .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
-                        protected void initChannel(Channel ch) {
-                            ch.pipeline().addLast(new HttpServerCodec());
-                            ch.pipeline().addLast(new HttpObjectAggregator(65536));
-                            ch.pipeline().addLast(new SimpleChannelInboundHandler<FullHttpRequest>() {
+                        protected void initChannel(SocketChannel ch) {
+                            ChannelPipeline p = ch.pipeline();
+                            p.addLast(new HttpServerCodec());
+                            p.addLast(new HttpObjectAggregator(65536));
+                            p.addLast(new SimpleChannelInboundHandler<FullHttpRequest>() {
+
                                 @Override
-                                protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest msg) {
-                                    if (state() instanceof ResourcePackState.Loaded loaded) {
-                                        var bytes = loaded.bytes();
-                                        var content = Unpooled.wrappedBuffer(bytes);
-                                        var response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, content);
-                                        response.headers().set(HttpHeaderNames.CONTENT_TYPE, "application/zip");
-                                        response.headers().set(HttpHeaderNames.CONTENT_LENGTH, bytes.length);
-                                        ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+                                protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest request) {
+                                    ResourcePackState state = state();
+                                    if (state instanceof ResourcePackState.Loaded) {
+                                        ResourcePackState.Loaded loaded = (ResourcePackState.Loaded) state;
+                                        byte[] bytes = loaded.bytes();
+
+                                        FullHttpResponse response = new DefaultFullHttpResponse(
+                                                HttpVersion.HTTP_1_1,
+                                                HttpResponseStatus.OK,
+                                                Unpooled.wrappedBuffer(bytes)
+                                        );
+
+                                        response.headers()
+                                                .set(HttpHeaderNames.CONTENT_TYPE, "application/zip")
+                                                .set(HttpHeaderNames.CONTENT_DISPOSITION, "attachment; filename=\"resourcepack.zip\"")
+                                                .set(HttpHeaderNames.CONTENT_LENGTH, bytes.length);
+
+                                        ctx.writeAndFlush(response)
+                                                .addListener(ChannelFutureListener.CLOSE);
                                     } else {
-                                        ctx.writeAndFlush(new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NOT_FOUND))
+                                        DefaultFullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NOT_FOUND);
+                                        ctx.writeAndFlush(response)
                                                 .addListener(ChannelFutureListener.CLOSE);
                                     }
                                 }
+
+                                @Override
+                                public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+                                    // Close without logging
+                                    ctx.close();
+                                }
                             });
                         }
-                    });
-
-            var ch = b.bind(address).sync().channel();
+                    })
+                    .bind(address)
+                    .sync()
+                    .channel();
 
             beforeLock.run();
 
-            ch.closeFuture().sync();
+            b.closeFuture().sync();
         } finally {
             bossGroup.shutdownGracefully();
             workerGroup.shutdownGracefully();

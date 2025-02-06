@@ -1,9 +1,8 @@
-package com.robsutar.rnu.paper;
+package com.robsutar.rnu.bukkit;
 
 import com.robsutar.rnu.ResourcePackLoadException;
 import com.robsutar.rnu.ResourcePackNoUpload;
 import com.robsutar.rnu.ResourcePackState;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -24,18 +23,17 @@ public class RNUCommand implements CommandExecutor, TabCompleter {
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (args.length != 1 || !args[0].equals("reload")) return false;
 
-        var mm = MiniMessage.miniMessage();
         try {
             plugin.load();
-            sender.sendMessage(mm.deserialize("<green>Resource pack reloaded successfully!"));
+            sender.sendMessage("§aResource pack reloaded successfully!");
         } catch (ResourcePackLoadException e) {
             if (plugin.resourcePackState() instanceof ResourcePackState.Loading) {
-                sender.sendMessage(mm.deserialize("<red><bold>ERROR!</bold> <yellow>Resource pack is already being loaded!"));
+                sender.sendMessage("§c§lERROR!§r §eResource pack is already being loaded!");
             } else {
-                sender.sendMessage(mm.deserialize("<red><bold>ERROR!</bold> Failed to reload resource pack. Message: <white>" + e.getMessage()));
-                sender.sendMessage(mm.deserialize("<yellow>See console for more info."));
-                sender.sendMessage(mm.deserialize("<yellow>The resource pack sending is disabled."));
-                sender.sendMessage(mm.deserialize("<yellow><italic>Once the problem is fixed, you can use `/rnu reload` again."));
+                sender.sendMessage("§c§lERROR!§r §4Failed to reload resource pack. Message: §f" + e.getMessage());
+                sender.sendMessage("§eSee console for more info.");
+                sender.sendMessage("§eThe resource pack sending is disabled.");
+                sender.sendMessage("§e<italic>Once the problem is fixed, you can use `/rnu reload` again.");
             }
         }
 

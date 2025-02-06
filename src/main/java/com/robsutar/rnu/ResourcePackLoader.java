@@ -13,19 +13,19 @@ public interface ResourcePackLoader {
     Map<String, File> appendFiles() throws Exception;
 
     default byte[] load() throws Exception {
-        try (var byteOut = new ByteArrayOutputStream(); var zipOut = new ZipOutputStream(byteOut)) {
-            var appended = appendFiles();
+        try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream(); ZipOutputStream zipOut = new ZipOutputStream(byteOut)) {
+            Map<String, File> appended = appendFiles();
 
-            for (var entry : appended.entrySet()) {
-                var file = entry.getValue();
-                var name = entry.getKey();
+            for (Map.Entry<String, File> entry : appended.entrySet()) {
+                File file = entry.getValue();
+                String name = entry.getKey();
                 if (!file.isFile()) throw new IllegalArgumentException();
 
-                var fileIn = new FileInputStream(file);
-                var zipEntry = new ZipEntry(name);
+                FileInputStream fileIn = new FileInputStream(file);
+                ZipEntry zipEntry = new ZipEntry(name);
                 zipOut.putNextEntry(zipEntry);
 
-                var buffer = new byte[1024];
+                byte[] buffer = new byte[1024];
                 int len;
                 while ((len = fileIn.read(buffer)) > 0) {
                     zipOut.write(buffer, 0, len);
@@ -40,12 +40,17 @@ public interface ResourcePackLoader {
     }
 
     static ResourcePackLoader deserialize(ConfigurationSection raw) {
-        var type = Objects.requireNonNull(raw.getString("type"), "Missing loader type");
-        return switch (type) {
-            case "Manual" -> new Manual(raw);
-            case "Merged" -> new Merged(raw);
-            default -> throw new IllegalArgumentException("Invalid loader type: " + type);
-        };
+        String type = Objects.requireNonNull(raw.getString("type"), "Missing loader type");
+        switch (type) {
+            case "Manual":
+                return new Manual(raw);
+
+            case "Merged":
+                return new Merged(raw);
+
+            default:
+                throw new IllegalArgumentException("Invalid loader type: " + type);
+        }
     }
 
     class Manual implements ResourcePackLoader {
@@ -60,15 +65,15 @@ public interface ResourcePackLoader {
             if (!folder.exists()) throw new Exception("Directory not found: " + folder);
             if (!folder.isDirectory()) throw new Exception("File is not directory: " + folder);
 
-            var output = new HashMap<String, File>();
+            HashMap<String, File> output = new HashMap<String, File>();
             appendDirectory(output, folder, "");
             return output;
         }
 
         private static void appendDirectory(Map<String, File> output, File directory, String parentPath) {
-            var files = directory.listFiles();
+            File[] files = directory.listFiles();
             if (files != null) {
-                for (var file : files) {
+                for (File file : files) {
                     if (file.isFile()) {
                         output.put(parentPath + file.getName(), file);
                     } else if (file.isDirectory()) {
@@ -83,8 +88,8 @@ public interface ResourcePackLoader {
         private final List<ResourcePackLoader> loaders = new ArrayList<>();
 
         public Merged(ConfigurationSection raw) {
-            for (var loaderMap : raw.getMapList("loaders")) {
-                var loaderRaw = raw.createSection("DISPOSABLE_SECTION", loaderMap);
+            for (Map<?, ?> loaderMap : raw.getMapList("loaders")) {
+                ConfigurationSection loaderRaw = raw.createSection("DISPOSABLE_SECTION", loaderMap);
                 loaders.add(deserialize(loaderRaw));
             }
             raw.set("DISPOSABLE_SECTION", null);
@@ -92,9 +97,9 @@ public interface ResourcePackLoader {
 
         @Override
         public Map<String, File> appendFiles() throws Exception {
-            var output = new HashMap<String, File>();
-            for (var i = loaders.size() - 1; i >= 0; i--) {
-                var loader = loaders.get(i);
+            HashMap<String, File> output = new HashMap<String, File>();
+            for (int i = loaders.size() - 1; i >= 0; i--) {
+                ResourcePackLoader loader = loaders.get(i);
                 output.putAll(loader.appendFiles());
             }
             return output;
