@@ -44,7 +44,6 @@ shadowJar {
 
     archiveClassifier.set('')
     relocate 'io.netty', shadowPath + 'io.netty'
-    relocate 'net.kyori', shadowPath + 'net.kyori'
     minimize()
 }
 

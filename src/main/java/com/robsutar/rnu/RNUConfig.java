@@ -1,7 +1,5 @@
 package com.robsutar.rnu;
 
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.jetbrains.annotations.Nullable;
@@ -14,13 +12,11 @@ import java.util.Objects;
 
 public record RNUConfig(InetSocketAddress address,
                         URI uri,
-                        Component prompt,
-                        @Nullable Component kickOnRefuseMessage,
-                        @Nullable Component kickOnFailMessage,
+                        String prompt,
+                        @Nullable String kickOnRefuseMessage,
+                        @Nullable String kickOnFailMessage,
                         ResourcePackLoader loader) {
     public static RNUConfig deserialize(ConfigurationSection raw) throws IllegalArgumentException {
-        var mm = MiniMessage.miniMessage();
-
         if (raw.get("port") == null)
             throw new IllegalArgumentException("""
                     Port undefined in configuration!
@@ -49,9 +45,9 @@ public record RNUConfig(InetSocketAddress address,
         return new RNUConfig(
                 new InetSocketAddress(addressStr, port),
                 URI.create("http://" + addressStr + ":" + port),
-                mm.deserialize(Objects.requireNonNull(raw.getString("prompt"))),
-                raw.get("kickOnRefuseMessage") instanceof String s1 ? mm.deserialize(s1) : null,
-                raw.get("kickOnFailMessage") instanceof String s1 ? mm.deserialize(s1) : null,
+                Objects.requireNonNull(raw.getString("prompt")),
+                raw.get("kickOnRefuseMessage") instanceof String s1 ? s1 : null,
+                raw.get("kickOnFailMessage") instanceof String s1 ? s1 : null,
                 ResourcePackLoader.deserialize(Objects.requireNonNull(raw.getConfigurationSection("loader")))
         );
     }

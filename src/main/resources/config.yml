@@ -7,19 +7,19 @@ port:
 serverAddress:
 
 # Message sent to the players when sending the resource pack
-prompt: "<bold>Accept</bold> our resource pack to have the <gold>right</gold> server experience!"
+prompt: "§lAccept§r our resource pack to have the §6best§r server experience!"
 
 # Kicks the players if they refuse the resource pack.
 # Leave this field blank to avoid kick.
 kickOnRefuseMessage: |
-  <red>Resource pack refused.</red> If you didn't mean to, go to your server list,edit that server,
-  and change the <aqua>`Server Resource Packs`</aqua> option to <gold>`Enabled`</gold>.
+  §cResource pack refused.§r If you didn't mean to, go to your server list, edit that server, 
+  and change the §bServer Resource Packs§r option to §6Enabled§r.
 
 # Kicks ths players if they had problems downloading the resource pack.
 # This is generally a server problem.
 # Leave this field blank to avoid kick.
 kickOnFailMessage: |
-  <red>Failed to download resource pack</red>, error code: <gold><error_code></gold>.
+  §cFailed to download resource pack§r, error code: §6<error_code>§r.
 
 # The texture pack loader, called every time that the resource pack is loaded by the plugin.
 # Each type has their own fields.
@@ -32,7 +32,7 @@ loader:
   type: Manual
 
   ### Relative to the server root folder.
-  folder: "plugins/ResourcePackLoader/Manual Pack/"
+  folder: "plugins/ResourcePackNoUpload/Manual Pack/"
 
   ### === End of `Manual` type example.
 
