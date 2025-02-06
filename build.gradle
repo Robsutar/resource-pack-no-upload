@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'com.gradleup.shadow' version '8.3.6'
 }
 
 group = 'com.robsutar.rnu'
@@ -33,3 +34,15 @@ processResources {
         expand props
     }
 }
+
+shadowJar {
+    def shadowPath = group + '.shadow.'
+
+    archiveClassifier.set('')
+    relocate 'io.netty', shadowPath + 'io.netty'
+    minimize()
+}
+
+// Disable jar and replace with shadowJar
+jar.enabled = false
+assemble.dependsOn(shadowJar)
