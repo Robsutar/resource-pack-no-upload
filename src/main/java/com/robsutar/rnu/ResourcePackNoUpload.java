@@ -1,16 +1,12 @@
 package com.robsutar.rnu;
 
-import com.robsutar.rnu.bukkit.BukkitListener;
-import com.robsutar.rnu.bukkit.BukkitTargetPlatform;
-import com.robsutar.rnu.bukkit.RNUCommand;
-import com.robsutar.rnu.bukkit.RNUPackLoadedEvent;
+import com.robsutar.rnu.bukkit.*;
 import org.bukkit.Bukkit;
-import org.bukkit.configuration.InvalidConfigurationException;
-import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.io.File;
-import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Objects;
@@ -53,30 +49,55 @@ public final class ResourcePackNoUpload extends JavaPlugin {
         });
     }
 
+    private TextureProviderBytes loadTextureProviderBytes() {
+        ConfigurationSection raw = BukkitUtil.loadOrCreateConfig(this, "server.yml");
+
+        String addressStr;
+        String addressRaw = raw.getString("serverAddress");
+        if (addressRaw != null) addressStr = addressRaw;
+        else {
+            String definedIp = Bukkit.getIp();
+            if (!definedIp.isEmpty()) addressStr = definedIp;
+            else try {
+                addressStr = InetAddress.getLocalHost().getHostAddress();
+            } catch (UnknownHostException e) {
+                throw new IllegalArgumentException("Failed to get server address from program ipv4.");
+            }
+        }
+
+        if (raw.get("port") == null)
+            throw new IllegalArgumentException(
+                    "Port undefined in configuration!\n" +
+                            "Define it in plugins/ResourcePackNoUpload/server.yml\n" +
+                            "Make sure to open this port to the players.\n"
+            );
+        int port = raw.getInt("port");
+
+        return new TextureProviderBytes(addressStr, port) {
+            @Override
+            public ResourcePackState state() {
+                return resourcePackState;
+            }
+        };
+    }
+
     public ResourcePackState.Loaded load() throws ResourcePackLoadException {
         try {
             if (resourcePackState instanceof ResourcePackState.Loading)
                 throw new ResourcePackLoadException("Already loading");
             resourcePackState = new ResourcePackState.Loading();
 
-            File folder = getDataFolder();
-            if (!folder.exists() && !folder.mkdir())
-                throw new ResourcePackLoadException("Failed to create plugin folder");
+            ConfigurationSection configRaw;
 
-            YamlConfiguration configRaw = new YamlConfiguration();
-            File configFile = new File(folder, "config.yml");
-            if (!configFile.exists()) {
-                saveResource("config.yml", false);
-            }
             try {
-                configRaw.load(configFile);
-            } catch (IOException | InvalidConfigurationException e) {
-                throw new ResourcePackLoadException("Failed to load configuration file");
+                configRaw = BukkitUtil.loadOrCreateConfig(this, "config.yml");
+            } catch (IllegalStateException e) {
+                throw new ResourcePackLoadException("Failed to load configuration file.", e);
             }
             try {
                 config = RNUConfig.deserialize(configRaw);
             } catch (Exception e) {
-                throw new ResourcePackLoadException("Failed to deserialize configuration from file");
+                throw new ResourcePackLoadException("Failed to deserialize configuration from file", e);
             }
 
             byte[] bytes;
