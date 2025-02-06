@@ -1,8 +1,8 @@
-target/
-!.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
-dependency-reduced-pom.xml
+# Ignore Gradle project-specific cache directory
+.gradle
+
+# Ignore Gradle build output directory
+build
 
 ### IntelliJ IDEA ###
 .idea
