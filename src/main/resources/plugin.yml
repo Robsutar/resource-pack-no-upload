@@ -1,6 +1,6 @@
-name: ResourcePackNoUpload
-version: '${project.version}'
-main: com.robsutar.rnu.ResourcePackNoUpload
+main: "${PACKAGE}.${NAME}"
+name: "${NAME}"
+version: "${VERSION}"
 api-version: '1.21'
 description: Send your resource pack, without uploading it
 authors: [ Robsutar ]

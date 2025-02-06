@@ -24,3 +24,12 @@ dependencies {
     implementation 'io.netty:netty-all:4.1.115.Final'
     compileOnly 'io.papermc.paper:paper-api:1.21.1-R0.1-SNAPSHOT'
 }
+
+processResources {
+    def props = [NAME: rootProject.name, VERSION: version, PACKAGE: project.group.toString()]
+    inputs.properties props
+    filteringCharset 'UTF-8'
+    filesMatching('plugin.yml') {
+        expand props
+    }
+}
