@@ -1,15 +1,14 @@
 package com.robsutar.rnu;
 
-import java.net.URI;
 import java.util.UUID;
 
 public final class ResourcePackInfo {
     private final UUID id;
-    private final URI uri;
-    private final String hash;
+    private final String uri;
+    private final byte[] hash;
     private final String prompt;
 
-    public ResourcePackInfo(UUID id, URI uri, String hash, String prompt) {
+    public ResourcePackInfo(UUID id, String uri, byte[] hash, String prompt) {
         this.id = id;
         this.uri = uri;
         this.hash = hash;
@@ -20,11 +19,11 @@ public final class ResourcePackInfo {
         return id;
     }
 
-    public URI uri() {
+    public String uri() {
         return uri;
     }
 
-    public String hash() {
+    public byte[] hash() {
         return hash;
     }
 
