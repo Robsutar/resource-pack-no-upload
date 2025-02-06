@@ -26,9 +26,7 @@ public final class ResourcePackNoUpload extends JavaPlugin {
             loaded = load();
             resourcePackState = new ResourcePackState.LoadedPendingProvider(loaded);
         } catch (ResourcePackLoadException e) {
-            throw new RuntimeException("""
-                    Initial loading failed, and the initial configuration could not be loaded, disabling plugin.
-                    """, e);
+            throw new RuntimeException("Initial loading failed, and the initial configuration could not be loaded, disabling plugin.", e);
         }
 
         Bukkit.getPluginManager().registerEvents(new PaperListener(this), this);
@@ -58,12 +56,12 @@ public final class ResourcePackNoUpload extends JavaPlugin {
                 throw new ResourcePackLoadException("Already loading");
             resourcePackState = new ResourcePackState.Loading();
 
-            var folder = getDataFolder();
+            File folder = getDataFolder();
             if (!folder.exists() && !folder.mkdir())
                 throw new ResourcePackLoadException("Failed to create plugin folder");
 
-            var configRaw = new YamlConfiguration();
-            var configFile = new File(folder, "config.yml");
+            YamlConfiguration configRaw = new YamlConfiguration();
+            File configFile = new File(folder, "config.yml");
             if (!configFile.exists()) {
                 saveResource("config.yml", false);
             }
@@ -87,9 +85,9 @@ public final class ResourcePackNoUpload extends JavaPlugin {
 
             String hashStr;
             try {
-                var hash = MessageDigest.getInstance("SHA-1").digest(bytes);
-                var sha1Hash = new StringBuilder();
-                for (var hashedByte : hash) {
+                byte[] hash = MessageDigest.getInstance("SHA-1").digest(bytes);
+                StringBuilder sha1Hash = new StringBuilder();
+                for (byte hashedByte : hash) {
                     sha1Hash.append(Integer.toString((hashedByte & 0xff) + 0x100, 16).substring(1));
                 }
                 hashStr = sha1Hash.toString();
@@ -97,9 +95,9 @@ public final class ResourcePackNoUpload extends JavaPlugin {
                 throw new ResourcePackLoadException("Failed to load SHA-1 algorithm to create texture hash.");
             }
 
-            var resourcePackInfo = new ResourcePackInfo(UUID.randomUUID(), config().uri(), hashStr);
+            ResourcePackInfo resourcePackInfo = new ResourcePackInfo(UUID.randomUUID(), config().uri(), hashStr);
 
-            var newState = new ResourcePackState.Loaded(resourcePackInfo, bytes);
+            ResourcePackState.Loaded newState = new ResourcePackState.Loaded(resourcePackInfo, bytes);
             resourcePackState = newState;
 
             Bukkit.getPluginManager().callEvent(new RNUPackLoadedEvent(resourcePackInfo));

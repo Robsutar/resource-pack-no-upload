@@ -1,5 +1,6 @@
 package com.robsutar.rnu.paper;
 
+import com.robsutar.rnu.RNUConfig;
 import com.robsutar.rnu.ResourcePackInfo;
 import com.robsutar.rnu.ResourcePackNoUpload;
 import com.robsutar.rnu.ResourcePackState;
@@ -31,46 +32,54 @@ public class PaperListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerJoin(PlayerJoinEvent event) {
-        var player = event.getPlayer();
+        Player player = event.getPlayer();
 
-        if (plugin.resourcePackState() instanceof ResourcePackState.Loaded loaded) {
+        if (plugin.resourcePackState() instanceof ResourcePackState.Loaded) {
+            ResourcePackState.Loaded loaded = (ResourcePackState.Loaded) plugin.resourcePackState();
             sendPack(player, loaded.resourcePackInfo());
         }
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerResourcePackStatus(PlayerResourcePackStatusEvent event) {
-        var config = plugin.config();
-        var player = event.getPlayer();
-        var status = event.getStatus();
+        RNUConfig config = plugin.config();
+        Player player = event.getPlayer();
+        PlayerResourcePackStatusEvent.Status status = event.getStatus();
 
         switch (status.name()) {
             // Intermediates called here.
-            case "ACCEPTED", "DOWNLOADED" -> {
-            }
-            case "DECLINED" -> {
+            case "ACCEPTED":
+            case "DOWNLOADED":
+                break;
+            case "DECLINED": {
                 if (config.kickOnRefuseMessage() != null) {
                     player.kickPlayer(config.kickOnRefuseMessage());
                 }
+                break;
             }
-            case "INVALID_URL", "FAILED_DOWNLOAD", "FAILED_RELOAD", "DISCARDED" -> {
+            case "INVALID_URL":
+            case "FAILED_DOWNLOAD":
+            case "FAILED_RELOAD":
+            case "DISCARDED": {
                 if (config.kickOnFailMessage() != null) {
                     player.kickPlayer(config.kickOnFailMessage().replace("<error_code>", status.name()));
                 }
+                break;
             }
-            case "SUCCESSFULLY_LOADED" -> {
+            case "SUCCESSFULLY_LOADED":
                 // All ok.
-            }
-            default -> throw new IllegalStateException(
-                    "Invalid state, " + plugin.getName() + " is outdated?"
-            );
+                break;
+            default:
+                throw new IllegalStateException(
+                        "Invalid state, " + plugin.getName() + " is outdated?"
+                );
         }
     }
 
     @EventHandler
     public void onRNUPackLoaded(RNUPackLoadedEvent event) {
-        var resourcePackInfo = event.getResourcePackInfo();
-        for (var pending : Bukkit.getOnlinePlayers()) {
+        ResourcePackInfo resourcePackInfo = event.getResourcePackInfo();
+        for (Player pending : Bukkit.getOnlinePlayers()) {
             sendPack(pending, resourcePackInfo);
         }
     }
