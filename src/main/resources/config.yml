@@ -11,8 +11,8 @@ prompt: "§lAccept§r our resource pack to have the §6best§r server experience
 
 # Kicks the players if they refuse the resource pack.
 # Leave this field blank to avoid kick.
-kickOnRefuseMessage: |
-  §cResource pack refused.§r If you didn't mean to, go to your server list, edit that server, 
+kickOnRefuseMessage: >
+  §cResource pack refused.§r If you didn't mean to, go to your server list, edit that server, \
   and change the §bServer Resource Packs§r option to §6Enabled§r.
 
 # Kicks ths players if they had problems downloading the resource pack.
