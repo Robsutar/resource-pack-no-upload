@@ -12,11 +12,34 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerResourcePackStatusEvent;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class BukkitListener implements Listener {
     private final ResourcePackNoUpload plugin;
+    private final HashMap<Player, Long> pending = new HashMap<>();
 
     public BukkitListener(ResourcePackNoUpload plugin) {
         this.plugin = plugin;
+        plugin.targetPlatform().runTaskTimer(this::checkPending, 40, 40);
+    }
+
+    private void checkPending() {
+        if (plugin.resourcePackState() instanceof ResourcePackState.Loaded) {
+            ResourcePackState.Loaded loaded = (ResourcePackState.Loaded) plugin.resourcePackState();
+            long currentTime = System.currentTimeMillis();
+
+            for (Map.Entry<Player, Long> entry : pending.entrySet()) {
+                if (currentTime - entry.getValue() > 1000) {
+                    addPending(entry.getKey(), loaded.resourcePackInfo());
+                }
+            }
+        }
+    }
+
+    private void addPending(Player player, ResourcePackInfo resourcePackInfo) {
+        pending.put(player, System.currentTimeMillis());
+        plugin.targetPlatform().setResourcePack(player, resourcePackInfo);
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -25,15 +48,15 @@ public class BukkitListener implements Listener {
 
         if (plugin.resourcePackState() instanceof ResourcePackState.Loaded) {
             ResourcePackState.Loaded loaded = (ResourcePackState.Loaded) plugin.resourcePackState();
-            plugin.targetPlatform().setResourcePack(player, loaded.resourcePackInfo());
+            addPending(player, loaded.resourcePackInfo());
         }
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerResourcePackStatus(PlayerResourcePackStatusEvent event) {
-        plugin.targetPlatform().runSync(() -> {
+        Player player = event.getPlayer();
+        if (pending.remove(player) != null) plugin.targetPlatform().runTask(() -> {
             RNUConfig config = plugin.config();
-            Player player = event.getPlayer();
             PlayerResourcePackStatusEvent.Status status = event.getStatus();
 
             switch (status.name()) {
@@ -70,8 +93,8 @@ public class BukkitListener implements Listener {
     @EventHandler
     public void onRNUPackLoaded(RNUPackLoadedEvent event) {
         ResourcePackInfo resourcePackInfo = event.getResourcePackInfo();
-        for (Player pending : Bukkit.getOnlinePlayers()) {
-            plugin.targetPlatform().setResourcePack(pending, resourcePackInfo);
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            addPending(player, resourcePackInfo);
         }
     }
 }
