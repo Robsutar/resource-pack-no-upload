@@ -95,7 +95,7 @@ public final class ResourcePackNoUpload extends JavaPlugin {
                 throw new ResourcePackLoadException("Failed to load SHA-1 algorithm to create texture hash.");
             }
 
-            ResourcePackInfo resourcePackInfo = new ResourcePackInfo(UUID.randomUUID(), config().uri(), hashStr);
+            ResourcePackInfo resourcePackInfo = new ResourcePackInfo(UUID.randomUUID(), config().uri(), hashStr, config.prompt());
 
             ResourcePackState.Loaded newState = new ResourcePackState.Loaded(resourcePackInfo, bytes);
             resourcePackState = newState;
