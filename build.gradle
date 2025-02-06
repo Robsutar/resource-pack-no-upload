@@ -5,6 +5,7 @@ plugins {
 
 group = 'com.robsutar.rnu'
 version = '1.1.0'
+def aaaaaaaaaa = group
 
 compileJava.options.encoding = 'UTF-8'
 
@@ -40,7 +41,7 @@ processResources {
 }
 
 shadowJar {
-    def shadowPath = group + '.shadow.'
+    def shadowPath = project.group.toString() + '.shadow.'
 
     archiveClassifier.set('')
     relocate 'io.netty', shadowPath + 'io.netty'
