@@ -1,5 +1,6 @@
 package com.robsutar.rnu.paper;
 
+import com.robsutar.rnu.ResourcePackInfo;
 import com.robsutar.rnu.ResourcePackNoUpload;
 import com.robsutar.rnu.ResourcePackState;
 import net.kyori.adventure.resource.ResourcePackInfo;

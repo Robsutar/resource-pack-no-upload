@@ -3,7 +3,6 @@ package com.robsutar.rnu;
 import com.robsutar.rnu.paper.PaperListener;
 import com.robsutar.rnu.paper.RNUCommand;
 import com.robsutar.rnu.paper.RNUPackLoadedEvent;
-import net.kyori.adventure.resource.ResourcePackInfo;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -98,7 +97,7 @@ public final class ResourcePackNoUpload extends JavaPlugin {
                 throw new ResourcePackLoadException("Failed to load SHA-1 algorithm to create texture hash.");
             }
 
-            var resourcePackInfo = ResourcePackInfo.resourcePackInfo(UUID.randomUUID(), config().uri(), hashStr);
+            var resourcePackInfo = new ResourcePackInfo(UUID.randomUUID(), config().uri(), hashStr);
 
             var newState = new ResourcePackState.Loaded(resourcePackInfo, bytes);
             resourcePackState = newState;

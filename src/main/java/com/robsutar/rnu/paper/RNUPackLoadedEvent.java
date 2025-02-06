@@ -1,6 +1,6 @@
 package com.robsutar.rnu.paper;
 
-import net.kyori.adventure.resource.ResourcePackInfo;
+import com.robsutar.rnu.ResourcePackInfo;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;

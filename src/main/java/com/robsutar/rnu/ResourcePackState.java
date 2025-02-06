@@ -1,7 +1,5 @@
 package com.robsutar.rnu;
 
-import net.kyori.adventure.resource.ResourcePackInfo;
-
 public interface ResourcePackState {
     record Loaded(ResourcePackInfo resourcePackInfo, byte[] bytes) implements ResourcePackState {
     }
