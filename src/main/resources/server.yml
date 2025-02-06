@@ -1,0 +1,9 @@
+# The configuration of this file can not be reloaded at runtime.
+
+# This port needs to be open to the players
+# This field has no default value, manual set is required.
+port:
+
+# Provides the address start for address for the resource pack.
+# If this is field is blank, it will use defined ip in server.properties, or the program ipv4.
+serverAddress:
