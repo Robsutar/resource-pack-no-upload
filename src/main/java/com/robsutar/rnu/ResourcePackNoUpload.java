@@ -1,16 +1,12 @@
 package com.robsutar.rnu;
 
-import com.robsutar.rnu.bukkit.BukkitListener;
-import com.robsutar.rnu.bukkit.BukkitTargetPlatform;
-import com.robsutar.rnu.bukkit.RNUCommand;
-import com.robsutar.rnu.bukkit.RNUPackLoadedEvent;
+import com.robsutar.rnu.bukkit.*;
 import org.bukkit.Bukkit;
-import org.bukkit.configuration.InvalidConfigurationException;
-import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.io.File;
-import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Objects;
@@ -18,12 +14,15 @@ import java.util.UUID;
 
 public final class ResourcePackNoUpload extends JavaPlugin {
     private TargetPlatform targetPlatform;
+    private TextureProviderBytes textureProviderBytes;
     private RNUConfig config;
     private ResourcePackState resourcePackState = new ResourcePackState.FailedToLoad();
 
     @Override
     public void onEnable() {
         targetPlatform = new BukkitTargetPlatform(this);
+
+        textureProviderBytes = loadTextureProviderBytes();
 
         ResourcePackState.Loaded loaded;
         try {
@@ -36,22 +35,50 @@ public final class ResourcePackNoUpload extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new BukkitListener(this), this);
         Objects.requireNonNull(getCommand("resourcepacknoupload")).setExecutor(new RNUCommand(this));
 
+
         Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
             try {
-                new TextureProviderBytes(config.address()) {
-                    @Override
-                    public ResourcePackState state() {
-                        return resourcePackState;
-                    }
-                }.run(() -> Bukkit.getScheduler().runTask(this, () -> {
+                textureProviderBytes.run(() -> Bukkit.getScheduler().runTask(this, () -> {
                     resourcePackState = loaded;
-                    getLogger().info("Resource pack provider bind address: " + config.address());
-                    getLogger().info("Resource pack provider bind uri: " + config.uri());
+                    getLogger().info("Resource pack provider bind address: " + textureProviderBytes.address());
+                    getLogger().info("Resource pack provider bind uri: " + textureProviderBytes.uri());
                 }));
             } catch (Exception e) {
                 throw new IllegalStateException("Failed to bind texture provider bytes", e);
             }
         });
+    }
+
+    private TextureProviderBytes loadTextureProviderBytes() {
+        ConfigurationSection raw = BukkitUtil.loadOrCreateConfig(this, "server.yml");
+
+        String addressStr;
+        String addressRaw = raw.getString("serverAddress");
+        if (addressRaw != null) addressStr = addressRaw;
+        else {
+            String definedIp = Bukkit.getIp();
+            if (!definedIp.isEmpty()) addressStr = definedIp;
+            else try {
+                addressStr = InetAddress.getLocalHost().getHostAddress();
+            } catch (UnknownHostException e) {
+                throw new IllegalArgumentException("Failed to get server address from program ipv4.");
+            }
+        }
+
+        if (raw.get("port") == null)
+            throw new IllegalArgumentException(
+                    "Port undefined in configuration!\n" +
+                            "Define it in plugins/ResourcePackNoUpload/server.yml\n" +
+                            "Make sure to open this port to the players.\n"
+            );
+        int port = raw.getInt("port");
+
+        return new TextureProviderBytes(addressStr, port) {
+            @Override
+            public ResourcePackState state() {
+                return resourcePackState;
+            }
+        };
     }
 
     public ResourcePackState.Loaded load() throws ResourcePackLoadException {
@@ -60,24 +87,17 @@ public final class ResourcePackNoUpload extends JavaPlugin {
                 throw new ResourcePackLoadException("Already loading");
             resourcePackState = new ResourcePackState.Loading();
 
-            File folder = getDataFolder();
-            if (!folder.exists() && !folder.mkdir())
-                throw new ResourcePackLoadException("Failed to create plugin folder");
+            ConfigurationSection configRaw;
 
-            YamlConfiguration configRaw = new YamlConfiguration();
-            File configFile = new File(folder, "config.yml");
-            if (!configFile.exists()) {
-                saveResource("config.yml", false);
-            }
             try {
-                configRaw.load(configFile);
-            } catch (IOException | InvalidConfigurationException e) {
-                throw new ResourcePackLoadException("Failed to load configuration file");
+                configRaw = BukkitUtil.loadOrCreateConfig(this, "config.yml");
+            } catch (IllegalStateException e) {
+                throw new ResourcePackLoadException("Failed to load configuration file.", e);
             }
             try {
                 config = RNUConfig.deserialize(configRaw);
             } catch (Exception e) {
-                throw new ResourcePackLoadException("Failed to deserialize configuration from file");
+                throw new ResourcePackLoadException("Failed to deserialize configuration from file", e);
             }
 
             byte[] bytes;
@@ -96,7 +116,7 @@ public final class ResourcePackNoUpload extends JavaPlugin {
 
             ResourcePackInfo resourcePackInfo = new ResourcePackInfo(
                     UUID.randomUUID(),
-                    config().uri().toString(),
+                    textureProviderBytes.uri().toString(),
                     hash,
                     config.prompt()
             );
@@ -118,6 +138,10 @@ public final class ResourcePackNoUpload extends JavaPlugin {
 
     public TargetPlatform targetPlatform() {
         return targetPlatform;
+    }
+
+    public TextureProviderBytes textureProviderBytes() {
+        return textureProviderBytes;
     }
 
     public RNUConfig config() {
