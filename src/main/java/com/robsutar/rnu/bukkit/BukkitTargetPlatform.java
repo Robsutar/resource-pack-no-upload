@@ -129,8 +129,13 @@ public class BukkitTargetPlatform implements TargetPlatform {
     }
 
     @Override
-    public void runSync(Runnable runnable) {
-        Bukkit.getScheduler().runTask(plugin, runnable);
+    public void runTask(Runnable runnable, int delay) {
+        Bukkit.getScheduler().runTaskLater(plugin, runnable, delay);
+    }
+
+    @Override
+    public void runTaskTimer(Runnable runnable, int delay, int period) {
+        Bukkit.getScheduler().runTaskTimer(plugin, runnable, delay, period);
     }
 
     @Override
