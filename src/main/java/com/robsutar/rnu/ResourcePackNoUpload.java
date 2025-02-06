@@ -87,14 +87,9 @@ public final class ResourcePackNoUpload extends JavaPlugin {
                 throw new ResourcePackLoadException("Loader failed to load resource pack", e);
             }
 
-            String hashStr;
+            byte[] hash;
             try {
-                byte[] hash = MessageDigest.getInstance("SHA-1").digest(bytes);
-                StringBuilder sha1Hash = new StringBuilder();
-                for (byte hashedByte : hash) {
-                    sha1Hash.append(Integer.toString((hashedByte & 0xff) + 0x100, 16).substring(1));
-                }
-                hashStr = sha1Hash.toString();
+                hash = MessageDigest.getInstance("SHA-1").digest(bytes);
             } catch (NoSuchAlgorithmException e) {
                 throw new ResourcePackLoadException("Failed to load SHA-1 algorithm to create texture hash.");
             }
@@ -102,7 +97,7 @@ public final class ResourcePackNoUpload extends JavaPlugin {
             ResourcePackInfo resourcePackInfo = new ResourcePackInfo(
                     UUID.randomUUID(),
                     config().uri().toString(),
-                    hashStr.getBytes(),
+                    hash,
                     config.prompt()
             );
 
