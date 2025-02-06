@@ -1,8 +1,8 @@
 package com.robsutar.rnu;
 
-import com.robsutar.rnu.paper.PaperListener;
-import com.robsutar.rnu.paper.RNUCommand;
-import com.robsutar.rnu.paper.RNUPackLoadedEvent;
+import com.robsutar.rnu.bukkit.BukkitListener;
+import com.robsutar.rnu.bukkit.RNUCommand;
+import com.robsutar.rnu.bukkit.RNUPackLoadedEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -29,7 +29,7 @@ public final class ResourcePackNoUpload extends JavaPlugin {
             throw new RuntimeException("Initial loading failed, and the initial configuration could not be loaded, disabling plugin.", e);
         }
 
-        Bukkit.getPluginManager().registerEvents(new PaperListener(this), this);
+        Bukkit.getPluginManager().registerEvents(new BukkitListener(this), this);
         Objects.requireNonNull(getCommand("resourcepacknoupload")).setExecutor(new RNUCommand(this));
 
         Bukkit.getScheduler().runTaskAsynchronously(this, () -> {

@@ -1,4 +1,4 @@
-package com.robsutar.rnu.paper;
+package com.robsutar.rnu.bukkit;
 
 import com.robsutar.rnu.ResourcePackInfo;
 import org.bukkit.event.Event;

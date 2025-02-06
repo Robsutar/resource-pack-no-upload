@@ -1,4 +1,4 @@
-package com.robsutar.rnu.paper;
+package com.robsutar.rnu.bukkit;
 
 import com.robsutar.rnu.RNUConfig;
 import com.robsutar.rnu.ResourcePackInfo;
@@ -12,10 +12,10 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerResourcePackStatusEvent;
 
-public class PaperListener implements Listener {
+public class BukkitListener implements Listener {
     private final ResourcePackNoUpload plugin;
 
-    public PaperListener(ResourcePackNoUpload plugin) {
+    public BukkitListener(ResourcePackNoUpload plugin) {
         this.plugin = plugin;
     }
 
