@@ -1,0 +1,27 @@
+name: Building
+
+on:
+  workflow_run:
+    workflows: [ "Versioning" ]
+    types:
+      - completed
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Reading tag message from commit
+        id: get-tag-message
+        run: |
+          TAG_NAME=$(git describe --tags --abbrev=0)
+          TAG_MESSAGE=$(git tag -l $TAG_NAME --format='%(contents)')
+          echo "body=$TAG_MESSAGE" >> $GITHUB_OUTPUT
+
+
