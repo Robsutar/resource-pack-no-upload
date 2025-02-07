@@ -88,7 +88,7 @@ public class VelocityListener {
                     }
                     break;
                 }
-                case "SUCCESSFULLY_LOADED":
+                case "SUCCESSFUL":
                     // All ok.
                     break;
                 default:
