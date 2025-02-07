@@ -1,8 +1,11 @@
 package com.robsutar.rnu;
 
-import com.robsutar.rnu.bukkit.*;
+import com.robsutar.rnu.bukkit.BukkitListener;
+import com.robsutar.rnu.bukkit.BukkitUtil;
+import com.robsutar.rnu.bukkit.RNUCommand;
+import com.robsutar.rnu.bukkit.RNUPackLoadedEvent;
+import com.robsutar.rnu.util.OC;
 import org.bukkit.Bukkit;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -14,20 +17,18 @@ import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Comparator;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Stream;
 
 public final class ResourcePackNoUpload extends JavaPlugin {
-    private TargetPlatform targetPlatform;
     private TextureProviderBytes textureProviderBytes;
     private RNUConfig config;
     private ResourcePackState resourcePackState = new ResourcePackState.FailedToLoad();
 
     @Override
     public void onEnable() {
-        targetPlatform = new BukkitTargetPlatform(this);
-
         textureProviderBytes = loadTextureProviderBytes();
 
         ResourcePackState.Loaded loaded;
@@ -55,11 +56,10 @@ public final class ResourcePackNoUpload extends JavaPlugin {
     }
 
     private TextureProviderBytes loadTextureProviderBytes() {
-        ConfigurationSection raw = BukkitUtil.loadOrCreateConfig(this, "server.yml");
+        Map<String, Object> raw = BukkitUtil.loadOrCreateConfig(this, "server.yml");
 
         String addressStr;
-        String addressRaw = raw.getString("serverAddress");
-        if (addressRaw != null) addressStr = addressRaw;
+        if (raw.get("serverAddress") != null) addressStr = OC.str(raw.get("serverAddress"));
         else {
             String definedIp = Bukkit.getIp();
             if (!definedIp.isEmpty()) addressStr = definedIp;
@@ -76,7 +76,7 @@ public final class ResourcePackNoUpload extends JavaPlugin {
                             "Define it in plugins/ResourcePackNoUpload/server.yml\n" +
                             "Make sure to open this port to the players.\n"
             );
-        int port = raw.getInt("port");
+        int port = OC.intValue(raw.get("port"));
 
         return new TextureProviderBytes(addressStr, port) {
             @Override
@@ -110,7 +110,7 @@ public final class ResourcePackNoUpload extends JavaPlugin {
             if (!tempFolder.mkdir())
                 throw new ResourcePackLoadException("Failed to create temp folder.");
 
-            ConfigurationSection configRaw;
+            Map<String, Object> configRaw;
 
             try {
                 configRaw = BukkitUtil.loadOrCreateConfig(this, "config.yml");
@@ -157,10 +157,6 @@ public final class ResourcePackNoUpload extends JavaPlugin {
             resourcePackState = new ResourcePackState.FailedToLoad();
             throw new ResourcePackLoadException("Unexpected and unknown error", e);
         }
-    }
-
-    public TargetPlatform targetPlatform() {
-        return targetPlatform;
     }
 
     public TextureProviderBytes textureProviderBytes() {

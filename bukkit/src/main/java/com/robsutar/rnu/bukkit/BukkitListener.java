@@ -1,24 +1,113 @@
 package com.robsutar.rnu.bukkit;
 
+import com.robsutar.rnu.RNUConfig;
 import com.robsutar.rnu.ResourcePackInfo;
-import com.robsutar.rnu.TargetPlatform;
+import com.robsutar.rnu.ResourcePackNoUpload;
+import com.robsutar.rnu.ResourcePackState;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerResourcePackStatusEvent;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 
-public class BukkitTargetPlatform implements TargetPlatform {
-    private final JavaPlugin plugin;
+public class BukkitListener implements Listener {
+    private final ResourcePackNoUpload plugin;
     private final BiConsumer<Player, ResourcePackInfo> setResourcePackFunction;
 
-    @SuppressWarnings("JavaReflectionMemberAccess")
-    public BukkitTargetPlatform(JavaPlugin plugin) {
-        this.plugin = plugin;
+    private final HashMap<Player, Long> pending = new HashMap<>();
 
+    public BukkitListener(ResourcePackNoUpload plugin) {
+        this.plugin = plugin;
+        setResourcePackFunction = extractResourcePackFunction();
+
+        Bukkit.getScheduler().runTaskTimer(plugin, this::checkPending, 40, 40);
+    }
+
+    private void checkPending() {
+        if (plugin.resourcePackState() instanceof ResourcePackState.Loaded) {
+            ResourcePackState.Loaded loaded = (ResourcePackState.Loaded) plugin.resourcePackState();
+            long currentTime = System.currentTimeMillis();
+
+            for (Map.Entry<Player, Long> entry : pending.entrySet()) {
+                if (currentTime - entry.getValue() > 1000) {
+                    addPending(entry.getKey(), loaded.resourcePackInfo());
+                }
+            }
+        }
+    }
+
+    private void addPending(Player player, ResourcePackInfo resourcePackInfo) {
+        pending.put(player, System.currentTimeMillis());
+        setResourcePackFunction.accept(player, resourcePackInfo);
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        Player player = event.getPlayer();
+
+        if (plugin.resourcePackState() instanceof ResourcePackState.Loaded) {
+            ResourcePackState.Loaded loaded = (ResourcePackState.Loaded) plugin.resourcePackState();
+            addPending(player, loaded.resourcePackInfo());
+        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onPlayerResourcePackStatus(PlayerResourcePackStatusEvent event) {
+        Player player = event.getPlayer();
+        if (pending.remove(player) != null) Bukkit.getScheduler().runTask(plugin, () -> {
+            RNUConfig config = plugin.config();
+            PlayerResourcePackStatusEvent.Status status = event.getStatus();
+
+            switch (status.name()) {
+                // Intermediates called here.
+                case "ACCEPTED":
+                case "DOWNLOADED":
+                    break;
+                case "DECLINED": {
+                    if (config.kickOnRefuseMessage() != null) {
+                        player.kickPlayer(config.kickOnRefuseMessage());
+                    }
+                    break;
+                }
+                case "INVALID_URL":
+                case "FAILED_DOWNLOAD":
+                case "FAILED_RELOAD":
+                case "DISCARDED": {
+                    if (config.kickOnFailMessage() != null) {
+                        player.kickPlayer(config.kickOnFailMessage().replace("<error_code>", status.name()));
+                    }
+                    break;
+                }
+                case "SUCCESSFULLY_LOADED":
+                    // All ok.
+                    break;
+                default:
+                    throw new IllegalStateException(
+                            "Invalid state. Is " + plugin.getName() + " outdated?"
+                    );
+            }
+        });
+    }
+
+    @EventHandler
+    public void onRNUPackLoaded(RNUPackLoadedEvent event) {
+        ResourcePackInfo resourcePackInfo = event.getResourcePackInfo();
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            addPending(player, resourcePackInfo);
+        }
+    }
+
+    @SuppressWarnings("JavaReflectionMemberAccess")
+    private BiConsumer<Player, ResourcePackInfo> extractResourcePackFunction() {
         String setResourcePackError = "Target platform failed method call. Is " + plugin.getName() + " outdated?";
         Class<Player> pClass = Player.class;
         BiConsumer<Player, ResourcePackInfo> setResourcePackFunction;
@@ -113,7 +202,7 @@ public class BukkitTargetPlatform implements TargetPlatform {
             }
         }
 
-        this.setResourcePackFunction = setResourcePackFunction;
+        return setResourcePackFunction;
     }
 
     private void noUniqueId() {
@@ -128,18 +217,4 @@ public class BukkitTargetPlatform implements TargetPlatform {
         plugin.getLogger().warning("Resource Pack `hash` is not supported in this bukkit platform/version.");
     }
 
-    @Override
-    public void runTask(Runnable runnable, int delay) {
-        Bukkit.getScheduler().runTaskLater(plugin, runnable, delay);
-    }
-
-    @Override
-    public void runTaskTimer(Runnable runnable, int delay, int period) {
-        Bukkit.getScheduler().runTaskTimer(plugin, runnable, delay, period);
-    }
-
-    @Override
-    public void setResourcePack(Player player, ResourcePackInfo resourcePackInfo) {
-        setResourcePackFunction.accept(player, resourcePackInfo);
-    }
 }

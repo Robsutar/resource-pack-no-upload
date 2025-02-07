@@ -1,1 +1,3 @@
 rootProject.name = 'ResourcePackNoUpload'
+
+include ':core', ':bukkit'

@@ -1,10 +1,10 @@
 package com.robsutar.rnu;
 
-import org.bukkit.configuration.ConfigurationSection;
+import com.robsutar.rnu.util.OC;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
-import java.util.Objects;
+import java.util.Map;
 
 public final class RNUConfig {
     private final String prompt;
@@ -23,12 +23,12 @@ public final class RNUConfig {
         this.loader = loader;
     }
 
-    public static RNUConfig deserialize(File tempFolder, ConfigurationSection raw) throws IllegalArgumentException {
+    public static RNUConfig deserialize(File tempFolder, Map<String, Object> raw) throws IllegalArgumentException {
         return new RNUConfig(
-                Objects.requireNonNull(raw.getString("prompt")),
+                OC.str(raw.get("prompt")),
                 raw.get("kickOnRefuseMessage") instanceof String ? (String) raw.get("kickOnRefuseMessage") : null,
                 raw.get("kickOnFailMessage") instanceof String ? (String) raw.get("kickOnFailMessage") : null,
-                ResourcePackLoader.deserialize(tempFolder, Objects.requireNonNull(raw.getConfigurationSection("loader")))
+                ResourcePackLoader.deserialize(tempFolder, OC.map(raw.get("loader")))
         );
     }
 

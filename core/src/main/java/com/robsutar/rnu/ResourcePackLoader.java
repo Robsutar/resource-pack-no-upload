@@ -1,6 +1,6 @@
 package com.robsutar.rnu;
 
-import org.bukkit.configuration.ConfigurationSection;
+import com.robsutar.rnu.util.OC;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
@@ -40,8 +40,9 @@ public interface ResourcePackLoader {
         }
     }
 
-    static ResourcePackLoader deserialize(File tempFolder, ConfigurationSection raw) {
-        String type = Objects.requireNonNull(raw.getString("type"), "Missing loader type");
+    static ResourcePackLoader deserialize(File tempFolder, Map<String, Object> raw) {
+        if (raw.get("type") == null) throw new IllegalArgumentException("Missing loader type");
+        String type = OC.str(raw.get("type"));
         switch (type) {
             case "Manual":
                 return new Manual(raw);
@@ -62,8 +63,8 @@ public interface ResourcePackLoader {
     class Manual implements ResourcePackLoader {
         private final File folder;
 
-        public Manual(ConfigurationSection raw) {
-            this.folder = new File(Objects.requireNonNull(raw.getString("folder")));
+        public Manual(Map<String, Object> raw) {
+            this.folder = new File(OC.str(raw.get("folder")));
         }
 
         @Override
@@ -105,23 +106,21 @@ public interface ResourcePackLoader {
         private final URL url;
         private final List<Header> headers = new ArrayList<>();
 
-        public Download(File tempFolder, ConfigurationSection raw) {
+        public Download(File tempFolder, Map<String, Object> raw) {
             this.zipPath = new File(tempFolder, UUID.randomUUID() + ".Download.zip");
 
             try {
-                this.url = new URL(Objects.requireNonNull(raw.getString("url")));
+                this.url = new URL(OC.str(raw.get("url")));
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
 
-            for (Map<?, ?> loaderMap : raw.getMapList("headers")) {
-                ConfigurationSection loaderRaw = raw.createSection("DISPOSABLE_SECTION", loaderMap);
+            for (Map<String, Object> loaderRaw : OC.<Map<String, Object>>list(raw.get("headers"))) {
                 headers.add(new Header(
-                        Objects.requireNonNull(loaderRaw.getString("key")),
-                        Objects.requireNonNull(loaderRaw.getString("value"))
+                        OC.str(loaderRaw.get("key")),
+                        OC.str(loaderRaw.get("value"))
                 ));
             }
-            raw.set("DISPOSABLE_SECTION", null);
         }
 
         @Override
@@ -163,7 +162,8 @@ public interface ResourcePackLoader {
                 zis.closeEntry();
             }
 
-            zipPath.delete();
+            if (!zipPath.delete())
+                throw new IllegalArgumentException("Failed to delete temporary zip file: " + zipPath);
 
             return output;
         }
@@ -193,11 +193,11 @@ public interface ResourcePackLoader {
         private final String destination;
         private final ResourcePackLoader loader;
 
-        public WithMovedFiles(File tempFolder, ConfigurationSection raw) {
-            folder = Objects.requireNonNull(raw.getString("folder"));
-            destination = Objects.requireNonNull(raw.getString("destination"));
+        public WithMovedFiles(File tempFolder, Map<String, Object> raw) {
+            folder = OC.str(raw.get("folder"));
+            destination = OC.str(raw.get("destination"));
 
-            loader = deserialize(tempFolder, Objects.requireNonNull(raw.getConfigurationSection("loader")));
+            loader = deserialize(tempFolder, OC.map(raw.get("loader")));
         }
 
         @Override
@@ -253,12 +253,12 @@ public interface ResourcePackLoader {
         private final PathMatcher toDeletePattern;
         private final ResourcePackLoader loader;
 
-        public WithDeletedFiles(File tempFolder, ConfigurationSection raw) {
+        public WithDeletedFiles(File tempFolder, Map<String, Object> raw) {
             toDeletePattern = FileSystems.getDefault().getPathMatcher(
-                    "glob:" + Objects.requireNonNull(raw.getString("toDelete"))
+                    "glob:" + OC.str(raw.get("toDelete"))
             );
 
-            loader = deserialize(tempFolder, Objects.requireNonNull(raw.getConfigurationSection("loader")));
+            loader = deserialize(tempFolder, OC.map(raw.get("loader")));
         }
 
         @Override
@@ -283,12 +283,10 @@ public interface ResourcePackLoader {
     class Merged implements ResourcePackLoader {
         private final List<ResourcePackLoader> loaders = new ArrayList<>();
 
-        public Merged(File tempFolder, ConfigurationSection raw) {
-            for (Map<?, ?> loaderMap : raw.getMapList("loaders")) {
-                ConfigurationSection loaderRaw = raw.createSection("DISPOSABLE_SECTION", loaderMap);
+        public Merged(File tempFolder, Map<String, Object> raw) {
+            for (Map<String, Object> loaderRaw : OC.<Map<String, Object>>list(raw.get("loaders"))) {
                 loaders.add(deserialize(tempFolder, loaderRaw));
             }
-            raw.set("DISPOSABLE_SECTION", null);
         }
 
         @Override
