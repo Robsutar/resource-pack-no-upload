@@ -1,6 +1,7 @@
 package com.robsutar.rnu;
 
 import org.bukkit.configuration.ConfigurationSection;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -10,6 +11,8 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -40,12 +43,12 @@ public interface ResourcePackLoader {
         switch (type) {
             case "Manual":
                 return new Manual(raw);
-
             case "Merged":
                 return new Merged(tempFolder, raw);
-
             case "Download":
                 return new Download(tempFolder, raw);
+            case "WithMovedFiles":
+                return new WithMovedFiles(tempFolder, raw);
 
             default:
                 throw new IllegalArgumentException("Invalid loader type: " + type);
@@ -92,7 +95,6 @@ public interface ResourcePackLoader {
             }
         }
     }
-
 
     class Download implements ResourcePackLoader {
         private final File zipPath;
@@ -180,6 +182,76 @@ public interface ResourcePackLoader {
                 this.value = value;
             }
         }
+    }
+
+    class WithMovedFiles implements ResourcePackLoader {
+        private final String folder;
+        private final String destination;
+        private final ResourcePackLoader loader;
+
+        public WithMovedFiles(File tempFolder, ConfigurationSection raw) {
+            folder = Objects.requireNonNull(raw.getString("folder"));
+            destination = Objects.requireNonNull(raw.getString("destination"));
+
+            loader = deserialize(tempFolder, Objects.requireNonNull(raw.getConfigurationSection("loader")));
+        }
+
+        @Override
+        public Map<String, Consumer<ZipOutputStream>> appendFiles() throws Exception {
+            Map<String, Consumer<ZipOutputStream>> output = loader.appendFiles();
+
+            Map<String, String> toMove = new HashMap<>();
+            for (Map.Entry<String, Consumer<ZipOutputStream>> entry : output.entrySet()) {
+                String name = entry.getKey();
+                @Nullable String newName = removeShape(folder, name, false);
+                if (newName != null) {
+                    toMove.put(name, destination + newName);
+                } else {
+                    newName = removeShape(folder, name, true);
+                    if (newName != null) {
+                        toMove.put(name, destination + newName);
+                    }
+                }
+            }
+            for (Map.Entry<String, String> entry : toMove.entrySet()) {
+                Consumer<ZipOutputStream> applier = Objects.requireNonNull(output.remove(entry.getKey()));
+                output.put(entry.getValue(), applier);
+            }
+
+            return output;
+        }
+
+        public @Nullable String removeShape(String shape, String file, boolean greedy) {
+            // Separa as partes literais do shape
+            String[] parts = shape.split("\\?", -1);
+
+            // Monta a regex a partir do shape.
+            // Use (.*) se greedy for true, ou (.*?) se false.
+            String wildcardRegex = greedy ? "(.*)" : "(.*?)";
+
+            StringBuilder regex = new StringBuilder("^");
+            for (int i = 0; i < parts.length; i++) {
+                // Escapa os caracteres especiais na parte literal
+                regex.append(Pattern.quote(parts[i]));
+                // Se ainda houver um '?' depois, insere o grupo correspondente
+                if (i < parts.length - 1) {
+                    regex.append(wildcardRegex);
+                }
+            }
+
+            // Compila a regex
+            Pattern pattern = Pattern.compile(regex.toString());
+            Matcher matcher = pattern.matcher(file);
+
+            // Verifica se o file começa com o padrão shape
+            if (matcher.lookingAt()) {
+                int end = matcher.end();
+                return file.substring(end);
+            }
+            return null;
+        }
+
+
     }
 
     class Merged implements ResourcePackLoader {
