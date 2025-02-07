@@ -145,6 +145,7 @@ jobs:
           git push origin main
           git push origin v${{ steps.next_version.outputs.NEXT_VERSION }}
 
+
   release:
     runs-on: ubuntu-latest
     needs: versioning
