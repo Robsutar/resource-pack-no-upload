@@ -13,6 +13,10 @@ jobs:
       contains(github.event.pull_request.labels.*.name, 'minor-change') ||
       contains(github.event.pull_request.labels.*.name, 'major-change')
     runs-on: ubuntu-latest
+    outputs:
+      next_version: ${{ steps.next_version.outputs.NEXT_VERSION }}
+      list_prs: ${{ steps.list_prs.outputs.OUTPUT }}
+
     steps:
       - name: Log PR Information
         run: |
@@ -151,21 +155,6 @@ jobs:
           fetch-depth: 0
           fetch-tags: true
 
-      - name: Reading tag message from commit
-        id: get-tag-info
-        run: |
-          # Get tag name
-          TAG_NAME=$(git describe --tags --abbrev=0)
-          echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
-
-          echo "Tag: $TAG_NAME"
-
-          # Get release content
-          TAG_MESSAGE=$(git tag -l "$TAG_NAME" --format='%(contents)')
-          echo "body<<EOF" >> $GITHUB_OUTPUT
-          echo "$TAG_MESSAGE" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
@@ -181,9 +170,10 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.get-tag-info.outputs.tag_name }}
+          tag_name: v${{ needs.versioning.outputs.next_version }}
           body: |
-            ${{ steps.get-tag-info.outputs.body }}
+            Changes since last release:
+            ${{ needs.versioning.outputs.list_prs }}
           files: build/libs/*.jar
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
