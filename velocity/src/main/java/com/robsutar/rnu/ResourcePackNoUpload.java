@@ -33,7 +33,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
-@Plugin(id = "@name@",
+@Plugin(id = "resource-pack-no-upload",
         name = "@name@",
         version = "@version@",
         description = "Send your resource pack, without uploading it",
