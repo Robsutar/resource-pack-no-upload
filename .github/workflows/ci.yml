@@ -117,7 +117,7 @@ jobs:
             fi
 
             echo "Appending PR: $PR_TITLE #$PR_NUMBER"
-            OUTPUT="$OUTPUT- $PR_TITLE #$PR_NUMBER\n"
+            OUTPUT="$OUTPUT- $PR_TITLE #$PR_NUMBER$(echo -e '\n')"
           done <<< "$PR_LIST"
 
           echo -e "Find PRs from this version: \n$OUTPUT"
@@ -173,7 +173,7 @@ jobs:
           tag_name: v${{ needs.versioning.outputs.next_version }}
           body: |
             Changes since the last release:
-            ${{ fromJson('"' + needs.versioning.outputs.list_prs + '"') }}
+            ${{ needs.versioning.outputs.list_prs }}"
           files: "**/build/libs/*.jar"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
