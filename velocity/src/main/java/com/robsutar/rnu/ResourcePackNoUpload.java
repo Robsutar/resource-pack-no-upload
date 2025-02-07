@@ -64,7 +64,7 @@ public final class ResourcePackNoUpload {
             throw new RuntimeException("Initial loading failed, and the initial configuration could not be loaded, disabling plugin.", e);
         }
 
-        server.getEventManager().register(new VelocityListener(this), this);
+        server.getEventManager().register(this, new VelocityListener(this));
 
         CommandMeta commandMeta = server.getCommandManager().metaBuilder("resourcepacknoupload")
                 .aliases("rnu")
