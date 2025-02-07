@@ -1,0 +1,11 @@
+repositories {
+    maven {
+        name 'papermc'
+        url 'https://repo.papermc.io/repository/maven-public/'
+    }
+}
+
+dependencies {
+    implementation 'io.netty:netty-all:4.1.115.Final'
+    compileOnly 'org.jetbrains:annotations:23.0.0'
+}
