@@ -2,13 +2,16 @@ package com.robsutar.rnu;
 
 import org.bukkit.configuration.ConfigurationSection;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 public interface ResourcePackLoader {
@@ -32,14 +35,17 @@ public interface ResourcePackLoader {
         }
     }
 
-    static ResourcePackLoader deserialize(ConfigurationSection raw) {
+    static ResourcePackLoader deserialize(File tempFolder, ConfigurationSection raw) {
         String type = Objects.requireNonNull(raw.getString("type"), "Missing loader type");
         switch (type) {
             case "Manual":
                 return new Manual(raw);
 
             case "Merged":
-                return new Merged(raw);
+                return new Merged(tempFolder, raw);
+
+            case "Download":
+                return new Download(tempFolder, raw);
 
             default:
                 throw new IllegalArgumentException("Invalid loader type: " + type);
@@ -87,13 +93,102 @@ public interface ResourcePackLoader {
         }
     }
 
+
+    class Download implements ResourcePackLoader {
+        private final File zipPath;
+        private final URL url;
+        private final List<Header> headers = new ArrayList<>();
+
+        public Download(File tempFolder, ConfigurationSection raw) {
+            this.zipPath = new File(tempFolder, UUID.randomUUID() + ".Download.zip");
+
+            try {
+                this.url = new URL(Objects.requireNonNull(raw.getString("url")));
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+
+            for (Map<?, ?> loaderMap : raw.getMapList("headers")) {
+                ConfigurationSection loaderRaw = raw.createSection("DISPOSABLE_SECTION", loaderMap);
+                headers.add(new Header(
+                        Objects.requireNonNull(loaderRaw.getString("key")),
+                        Objects.requireNonNull(loaderRaw.getString("value"))
+                ));
+            }
+            raw.set("DISPOSABLE_SECTION", null);
+        }
+
+        @Override
+        public Map<String, Consumer<ZipOutputStream>> appendFiles() throws Exception {
+            HashMap<String, Consumer<ZipOutputStream>> output = new HashMap<>();
+
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            for (Header header : headers) {
+                connection.setRequestProperty(header.key, header.value);
+            }
+
+            try (InputStream inputStream = connection.getInputStream();
+                 ReadableByteChannel rbc = Channels.newChannel(inputStream);
+                 FileOutputStream fos = new FileOutputStream(zipPath)) {
+                fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
+            }
+
+            try (ZipInputStream zis = new ZipInputStream(Files.newInputStream(zipPath.toPath()))) {
+                ZipEntry zipEntry = zis.getNextEntry();
+                while (zipEntry != null) {
+                    if (!zipEntry.isDirectory()) {
+                        ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+                        byte[] buffer = new byte[1024];
+                        int len;
+                        while ((len = zis.read(buffer)) > 0) {
+                            byteStream.write(buffer, 0, len);
+                        }
+                        byte[] data = byteStream.toByteArray();
+                        output.put(zipEntry.getName(), zipOut -> {
+                            try {
+                                zipOut.write(data);
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
+                    }
+                    zipEntry = zis.getNextEntry();
+                }
+                zis.closeEntry();
+            }
+
+            zipPath.delete();
+
+            return output;
+        }
+
+        private static File newFile(File destinationDir, ZipEntry zipEntry) {
+            String entryName = zipEntry.getName();
+            String[] parts = entryName.split("/", 2);
+
+            String newEntryName = parts.length > 1 ? parts[1] : parts[0]; // Ignore root directory
+
+            return new File(destinationDir, newEntryName);
+        }
+
+        private static class Header {
+            private final String key;
+            private final String value;
+
+            private Header(String key, String value) {
+                this.key = key;
+                this.value = value;
+            }
+        }
+    }
+
     class Merged implements ResourcePackLoader {
         private final List<ResourcePackLoader> loaders = new ArrayList<>();
 
-        public Merged(ConfigurationSection raw) {
+        public Merged(File tempFolder, ConfigurationSection raw) {
             for (Map<?, ?> loaderMap : raw.getMapList("loaders")) {
                 ConfigurationSection loaderRaw = raw.createSection("DISPOSABLE_SECTION", loaderMap);
-                loaders.add(deserialize(loaderRaw));
+                loaders.add(deserialize(tempFolder, loaderRaw));
             }
             raw.set("DISPOSABLE_SECTION", null);
         }
