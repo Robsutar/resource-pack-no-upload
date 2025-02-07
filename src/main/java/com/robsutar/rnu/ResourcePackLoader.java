@@ -8,7 +8,9 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
+import java.nio.file.PathMatcher;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
@@ -49,6 +51,8 @@ public interface ResourcePackLoader {
                 return new Download(tempFolder, raw);
             case "WithMovedFiles":
                 return new WithMovedFiles(tempFolder, raw);
+            case "WithDeletedFiles":
+                return new WithDeletedFiles(tempFolder, raw);
 
             default:
                 throw new IllegalArgumentException("Invalid loader type: " + type);
@@ -242,6 +246,37 @@ public interface ResourcePackLoader {
                 return file.substring(end);
             }
             return null;
+        }
+    }
+
+    class WithDeletedFiles implements ResourcePackLoader {
+        private final PathMatcher toDeletePattern;
+        private final ResourcePackLoader loader;
+
+        public WithDeletedFiles(File tempFolder, ConfigurationSection raw) {
+            toDeletePattern = FileSystems.getDefault().getPathMatcher(
+                    "glob:" + Objects.requireNonNull(raw.getString("toDelete"))
+            );
+
+            loader = deserialize(tempFolder, Objects.requireNonNull(raw.getConfigurationSection("loader")));
+        }
+
+        @Override
+        public Map<String, Consumer<ZipOutputStream>> appendFiles() throws Exception {
+            Map<String, Consumer<ZipOutputStream>> output = loader.appendFiles();
+
+            List<String> toRemove = new ArrayList<>();
+            for (Map.Entry<String, Consumer<ZipOutputStream>> entry : output.entrySet()) {
+                String name = entry.getKey();
+                if (toDeletePattern.matches(new File(name).toPath())) {
+                    toRemove.add(name);
+                }
+            }
+            for (String name : toRemove) {
+                Objects.requireNonNull(output.remove(name));
+            }
+
+            return output;
         }
     }
 
