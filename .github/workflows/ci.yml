@@ -53,7 +53,7 @@ jobs:
       - name: Calculate next version
         id: next_version
         run: |
-          CURRENT_VERSION=$(grep "^version = '" build.gradle | head -n1 | awk -F"'" '{print $2}')
+          CURRENT_VERSION=$(grep "version = '" build.gradle | head -n1 | awk -F"'" '{print $2}')
           echo "Current version: $CURRENT_VERSION"
 
           MAJOR=$(echo $CURRENT_VERSION | cut -d. -f1)
@@ -124,7 +124,7 @@ jobs:
 
       - name: Update version in build.gradle
         run: |
-          sed -i "s/^version = '[^']*'/version = '${{ steps.next_version.outputs.NEXT_VERSION }}'/" build.gradle
+          sed -i "0,/version = '[^']*'/s//version = '${{ steps.next_version.outputs.NEXT_VERSION }}'/" build.gradle
 
       - name: Commit the version bump
         run: |
