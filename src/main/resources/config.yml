@@ -39,15 +39,12 @@ loader:
   # type: Download
 
   ### The link for the download.
-  # url: https://api.github.com/repos/Robsutar/super-cool-pack/zipball
-  ### Optional field, this is a list of headers, with their keys and values, for this
-  ### example we are using a GitHub Fine-grained personal access token, with reading
-  ### permissions.
+  # url: https://www.googleapis.com/drive/v3/files/FILE_ID?alt=media
+  ### Optional field, this is a list of headers, with their keys and values, Here we
+  ### are calling the Google API, and passing a required token to download the file.
   # headers:
   #   - key: "Authorization"
-  #     value: "Bearer github_pat_uS78ih32i9DASKxE83hd9203f1930c0ll-g1t-t0k3n2389"
-  #   - key: "Accept"
-  #     value: "application/vnd.github.v3+json"
+  #     value: "Bearer drive_api3213xih32i9DASKxE83hd9203f1930c0ll-d1v3-t0k3n2389"
 
   ### === End of `Download` type example.
 
