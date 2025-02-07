@@ -5,5 +5,5 @@
 port:
 
 # Provides the address start for address for the resource pack.
-# If this is field is blank, it will use defined ip in server.properties, or the program ipv4.
+# If this is field is blank, it will use defined ip in server configuration, or the program ipv4.
 serverAddress:
