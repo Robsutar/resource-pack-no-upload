@@ -1,4 +1,4 @@
-[![CI](https://github.com/Robsutar/resource-pack-no-upload/actions/workflows/building.yml/badge.svg)](https://github.com/Robsutar/resource-pack-no-upload/actions/workflows/ci.yml)
+[![CI](https://github.com/Robsutar/resource-pack-no-upload/actions/workflows/ci.yml/badge.svg)](https://github.com/Robsutar/resource-pack-no-upload/actions/workflows/ci.yml)
 
 # ResourcePackNoUpload Plugin
 
