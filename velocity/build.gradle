@@ -1,0 +1,28 @@
+plugins {
+    alias(libs.plugins.shadow)
+}
+
+repositories {
+    maven {
+        name 'papermc'
+        url 'https://repo.papermc.io/repository/maven-public/'
+    }
+}
+
+dependencies {
+    implementation project(':core')
+    compileOnly 'org.jetbrains:annotations:23.0.0'
+    compileOnly 'com.velocitypowered:velocity-api:3.1.1'
+}
+
+shadowJar {
+    def shadowPath = project.group.toString() + '.shadow.'
+
+    archiveClassifier.set('')
+    relocate 'io.netty', shadowPath + 'io.netty'
+    minimize()
+}
+
+// Disable jar and replace with shadowJar
+jar.enabled = false
+assemble.dependsOn(shadowJar)
