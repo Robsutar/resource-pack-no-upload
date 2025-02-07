@@ -30,6 +30,29 @@ loader:
 
 
 
+  ### === Example for `Download` type. ===
+
+  ### Downloads the resourcepack from a link.
+  ### At first, it would be somewhat against the plugin's purpose, but this loader also
+  ### supports http headers for the download request, allowing you to download the
+  ### resource,  pack with private keys.
+  # type: Download
+
+  ### The link for the download.
+  # url: https://api.github.com/repos/Robsutar/super-cool-pack/zipball
+  ### Optional field, this is a list of headers, with their keys and values, for this
+  ### example we are using a GitHub Fine-grained personal access token, with reading
+  ### permissions.
+  # headers:
+  #   - key: "Authorization"
+  #     value: "Bearer github_pat_uS78ih32i9DASKxE83hd9203f1930c0ll-g1t-t0k3n2389"
+  #   - key: "Accept"
+  #     value: "application/vnd.github.v3+json"
+
+  ### === End of `Download` type example.
+
+
+
   ### === Example for `Merged` type. ===
 
   ### It merges data from many types of loaders.
