@@ -222,36 +222,27 @@ public interface ResourcePackLoader {
         }
 
         public @Nullable String removeShape(String shape, String file, boolean greedy) {
-            // Separa as partes literais do shape
             String[] parts = shape.split("\\?", -1);
 
-            // Monta a regex a partir do shape.
-            // Use (.*) se greedy for true, ou (.*?) se false.
             String wildcardRegex = greedy ? "(.*)" : "(.*?)";
 
             StringBuilder regex = new StringBuilder("^");
             for (int i = 0; i < parts.length; i++) {
-                // Escapa os caracteres especiais na parte literal
                 regex.append(Pattern.quote(parts[i]));
-                // Se ainda houver um '?' depois, insere o grupo correspondente
                 if (i < parts.length - 1) {
                     regex.append(wildcardRegex);
                 }
             }
 
-            // Compila a regex
             Pattern pattern = Pattern.compile(regex.toString());
             Matcher matcher = pattern.matcher(file);
 
-            // Verifica se o file começa com o padrão shape
             if (matcher.lookingAt()) {
                 int end = matcher.end();
                 return file.substring(end);
             }
             return null;
         }
-
-
     }
 
     class Merged implements ResourcePackLoader {
