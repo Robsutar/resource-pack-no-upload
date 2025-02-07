@@ -20,8 +20,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetAddress;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
@@ -92,7 +94,14 @@ public final class ResourcePackNoUpload {
         String addressStr;
         if (raw.get("serverAddress") != null) addressStr = OC.str(raw.get("serverAddress"));
         else {
-            addressStr = server.getBoundAddress().getAddress().getHostAddress();
+            InetAddress hostAddress = getServer().getBoundAddress().getAddress();
+            if (!hostAddress.isAnyLocalAddress())
+                addressStr = hostAddress.getHostAddress();
+            else try {
+                addressStr = InetAddress.getLocalHost().getHostAddress();
+            } catch (UnknownHostException e) {
+                throw new IllegalArgumentException("Failed to get server address from program ipv4.");
+            }
         }
 
         if (raw.get("port") == null)
