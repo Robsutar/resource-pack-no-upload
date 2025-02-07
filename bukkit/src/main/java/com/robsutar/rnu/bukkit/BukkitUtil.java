@@ -1,30 +1,35 @@
 package com.robsutar.rnu.bukkit;
 
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.InvalidConfigurationException;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.Map;
 
 public class BukkitUtil {
-    public static ConfigurationSection loadOrCreateConfig(JavaPlugin plugin, String fileName) throws IllegalStateException {
+    private static final Yaml YAML = new Yaml();
+
+    public static <K, V> Map<K, V> loadOrCreateConfig(JavaPlugin plugin, String fileName) throws IllegalStateException {
         File folder = plugin.getDataFolder();
         if (!folder.exists() && !folder.mkdir())
             throw new IllegalStateException("Failed to create plugin folder");
 
-        YamlConfiguration configRaw = new YamlConfiguration();
         File configFile = new File(folder, fileName);
         if (!configFile.exists()) {
             plugin.saveResource(fileName, false);
         }
-        try {
-            configRaw.load(configFile);
-        } catch (IOException | InvalidConfigurationException e) {
-            throw new IllegalStateException("Failed to load configuration file");
+        try (InputStreamReader reader = new InputStreamReader(Files.newInputStream(configFile.toPath()), StandardCharsets.UTF_8)) {
+            Map<K, V> mapToAdd = YAML.load(reader);
+            if (mapToAdd == null) {
+                throw new IllegalArgumentException("null/empty yml: " + configFile);
+            }
+            return mapToAdd;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
-
-        return configRaw;
     }
 }
