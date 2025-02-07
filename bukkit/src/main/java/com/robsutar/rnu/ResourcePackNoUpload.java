@@ -1,6 +1,9 @@
 package com.robsutar.rnu;
 
-import com.robsutar.rnu.bukkit.*;
+import com.robsutar.rnu.bukkit.BukkitListener;
+import com.robsutar.rnu.bukkit.BukkitUtil;
+import com.robsutar.rnu.bukkit.RNUCommand;
+import com.robsutar.rnu.bukkit.RNUPackLoadedEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -19,15 +22,12 @@ import java.util.UUID;
 import java.util.stream.Stream;
 
 public final class ResourcePackNoUpload extends JavaPlugin {
-    private TargetPlatform targetPlatform;
     private TextureProviderBytes textureProviderBytes;
     private RNUConfig config;
     private ResourcePackState resourcePackState = new ResourcePackState.FailedToLoad();
 
     @Override
     public void onEnable() {
-        targetPlatform = new BukkitTargetPlatform(this);
-
         textureProviderBytes = loadTextureProviderBytes();
 
         ResourcePackState.Loaded loaded;
@@ -118,7 +118,7 @@ public final class ResourcePackNoUpload extends JavaPlugin {
                 throw new ResourcePackLoadException("Failed to load configuration file.", e);
             }
             try {
-                config = RNUConfig.deserialize(tempFolder, configRaw);
+                config = RNUConfig.deserialize(tempFolder, configRaw.getValues(true));
             } catch (Exception e) {
                 throw new ResourcePackLoadException("Failed to deserialize configuration from file", e);
             }
@@ -157,10 +157,6 @@ public final class ResourcePackNoUpload extends JavaPlugin {
             resourcePackState = new ResourcePackState.FailedToLoad();
             throw new ResourcePackLoadException("Unexpected and unknown error", e);
         }
-    }
-
-    public TargetPlatform targetPlatform() {
-        return targetPlatform;
     }
 
     public TextureProviderBytes textureProviderBytes() {
