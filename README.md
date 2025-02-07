@@ -149,3 +149,7 @@ loader:
 
 </details>
 
+## Additional Configurations
+
+There are other settings inside config.yml, such as messages and plugin behavior, refer to the automatically generated
+config.yml.
