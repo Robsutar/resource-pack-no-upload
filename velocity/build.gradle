@@ -1,4 +1,5 @@
 plugins {
+    alias(libs.plugins.blossom)
     alias(libs.plugins.shadow)
 }
 
@@ -13,6 +14,12 @@ dependencies {
     implementation project(':core')
     compileOnly 'org.jetbrains:annotations:23.0.0'
     compileOnly 'com.velocitypowered:velocity-api:3.1.1'
+}
+
+blossom {
+    replaceTokenIn('src/main/java/com/robsutar/rnu/ResourcePackNoUpload.java')
+    replaceToken '@name@', rootProject.name
+    replaceToken '@version@', project.version
 }
 
 shadowJar {
