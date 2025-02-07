@@ -18,14 +18,13 @@ jobs:
           fetch-tags: true
 
       - name: Reading tag message from commit
-        id: get-tag-message
+        id: get-tag-info
         run: |
           # Get tag name
           TAG_NAME=$(git describe --tags --abbrev=0)
           echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
           
           echo "Tag: $TAG_NAME"
-          echo "GitHub ref: ${{ github.ref_name }}"
           
           # Get release content
           TAG_MESSAGE=$(git tag -l "$TAG_NAME" --format='%(contents)')
@@ -49,6 +48,8 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.get-tag-info.outputs.tag_name }}
+          body: |
+            ${{ steps.get-tag-info.outputs.body }}
           files: build/libs/*.jar
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
