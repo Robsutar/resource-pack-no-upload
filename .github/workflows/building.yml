@@ -35,3 +35,11 @@ jobs:
 
       - name: Build with Gradle
         run: ./gradlew build
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          body: ${{ steps.get-tag-message.outputs.body }}
+          files: build/libs/*.jar
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
