@@ -1,4 +1,4 @@
-name: Versioning
+name: CI
 
 on:
   pull_request:
