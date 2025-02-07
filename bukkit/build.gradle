@@ -11,7 +11,6 @@ repositories {
 
 dependencies {
     implementation project(':core')
-    implementation 'io.netty:netty-all:4.1.115.Final'
     compileOnly 'org.jetbrains:annotations:23.0.0'
     // Paper is used just as transcriber of the bukkit classes, Paper classes are not used.
     // Version 1.15.2 is used for the same reason, is just an transcriber, newer version classes are not used.
