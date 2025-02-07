@@ -50,6 +50,37 @@ loader:
 
 
 
+  ### === Example for `WithMovedFiles` type. ===
+
+  ### Move files from a directory, to another. Supports unknown paths, for they use `?`.
+  # type: WithMovedFiles
+
+  ### The folder contents to be moved.
+  ### For this example, the download (see more loader information below) result for
+  ### the loader link would be something like:
+  ### `Robsutar-super-cool-pack78HN3278gj32d/assets/minecraft...`
+  ### We will use this first folder as origin, ignoring their name.
+  # folder: "?/"
+
+  ### The folder destination, here we are using the resource pack root.
+  # destination: ""
+
+  ### This can be any loader, For this loader example we are using a release in GitHub,
+  ### with Fine-grained personal  access token, with reading permissions. Depending on
+  ### the release, the content of the resource pack can be inside another download file,
+  ### we use WithMovedFiles to adjust this.
+  # loader:
+  #   url: https://api.github.com/repos/Robsutar/super-cool-pack/zipball
+  #   headers:
+  #     - key: "Authorization"
+  #       value: "Bearer github_pat_uS78ih32i9DASKxE83hd9203f1930c0ll-g1t-t0k3n2389"
+  #     - key: "Accept"
+  #       value: "application/vnd.github.v3+json"
+
+  ### === End of `WithMovedFiles` type example.
+
+
+
   ### === Example for `Merged` type. ===
 
   ### It merges data from many types of loaders.
