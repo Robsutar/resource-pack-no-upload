@@ -1,0 +1,39 @@
+name: Versioning
+
+on:
+  pull_request:
+    types:
+      - closed
+
+jobs:
+  process-versioning:
+    if: >-
+      github.event.pull_request.merged == true &&
+      contains(github.event.pull_request.labels.*.name, 'patch-change') ||
+      contains(github.event.pull_request.labels.*.name, 'minor-change') ||
+      contains(github.event.pull_request.labels.*.name, 'major-change')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Log PR Information
+        run: |
+          echo "Closed PR with version label, creating new version."
+          echo "PR Title: ${{ github.event.pull_request.title }}"
+          echo "PR State: ${{ github.event.pull_request.state }}"
+
+          LABELS=$(echo '${{ toJson(github.event.pull_request.labels) }}' | jq -r '.[].name')
+          echo "Labels found: $LABELS"
+
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Configure GitHub CLI
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+
