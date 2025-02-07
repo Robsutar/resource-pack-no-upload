@@ -24,6 +24,8 @@ jobs:
           TAG_NAME=$(git describe --tags --abbrev=0)
           echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
           
+          echo "Tag: $TAG_NAME"
+          
           # Get release content
           TAG_MESSAGE=$(git tag -l "$TAG_NAME" --format='%(contents)')
           echo "body<<EOF" >> $GITHUB_OUTPUT
