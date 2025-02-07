@@ -76,3 +76,49 @@ jobs:
           echo "Next version: $NEXT_VERSION"
           echo "NEXT_VERSION=$NEXT_VERSION" >> $GITHUB_OUTPUT
 
+      - name: Get previous merged PRs until last version
+        id: list_prs
+        run: |
+          CURRENT_PR=${{ github.event.pull_request.number }}
+
+          BUMP_CONTAINING=""
+          if [[ "${{ steps.bump_type.outputs.BUMP_TYPE }}" == "major" ]]; then
+            BUMP_CONTAINING="major-change"
+          elif [[ "${{ steps.bump_type.outputs.BUMP_TYPE }}" == "minor" ]]; then
+            BUMP_CONTAINING="minor-change|major-change"
+          else
+            BUMP_CONTAINING="patch-change|minor-change|major-change"
+          fi
+
+          echo "Current PR: #$CURRENT_PR, Bump Containing: $BUMP_CONTAINING"
+
+          echo "Searching merged PRs..."
+          OUTPUT=""
+          
+          PR_LIST=$(gh pr list --state merged --json number,title,labels --limit 100 || echo "[]")
+          PR_LIST=$(echo "$PR_LIST" | jq -c '.[]')
+
+          while read -r pr; do
+            PR_NUMBER=$(echo "$pr" | jq '.number')
+            PR_TITLE=$(echo "$pr" | jq -r '.title')
+            PR_LABELS=$(echo "$pr" | jq -r '.labels | map(.name) | join(", ")')
+
+            echo "Reading PR: $PR_TITLE #$PR_NUMBER"
+
+            if echo "$PR_LABELS" | grep -q -E "$BUMP_CONTAINING"; then
+              if [ $PR_NUMBER -ne $CURRENT_PR ]; then
+                echo "Find PR of other version: #$PR_NUMBER ($PR_LABELS). Stopping search."
+                break
+              fi
+            fi
+
+            echo "Appending PR: $PR_TITLE #$PR_NUMBER"
+            OUTPUT="$OUTPUT- $PR_TITLE #$PR_NUMBER\n"
+          done <<< "$PR_LIST"
+
+          echo -e "Find PRs from this version: \n$OUTPUT"
+          
+          echo "OUTPUT<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$OUTPUT" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"  
+
