@@ -10,9 +10,18 @@ import org.bukkit.command.TabCompleter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class RNUCommand implements CommandExecutor, TabCompleter {
+    private static final List<String> SUGGESTIONS;
+
+    static {
+        SUGGESTIONS = new ArrayList<>();
+        SUGGESTIONS.add("reload");
+    }
+
     private final ResourcePackNoUpload plugin;
 
     public RNUCommand(ResourcePackNoUpload plugin) {
@@ -42,7 +51,7 @@ public class RNUCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-        if (args.length == 1) return List.of("reload");
-        return List.of();
+        if (args.length == 1) return SUGGESTIONS;
+        return Collections.emptyList();
     }
 }
