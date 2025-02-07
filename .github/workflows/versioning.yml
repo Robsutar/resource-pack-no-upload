@@ -37,3 +37,42 @@ jobs:
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
 
+      - name: Determine version bump type
+        id: bump_type
+        run: |
+          LABELS=$(echo '${{ toJson(github.event.pull_request.labels) }}' | jq -r '.[].name')
+
+          if echo "$LABELS" | grep -q "major-change"; then
+            echo "BUMP_TYPE=major" >> $GITHUB_OUTPUT
+          elif echo "$LABELS" | grep -q "minor-change"; then
+            echo "BUMP_TYPE=minor" >> $GITHUB_OUTPUT
+          else
+            echo "BUMP_TYPE=patch" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Calculate next version
+        id: next_version
+        run: |
+          CURRENT_VERSION=$(grep "^version = '" build.gradle | head -n1 | awk -F"'" '{print $2}')
+          echo "Current version: $CURRENT_VERSION"
+
+          MAJOR=$(echo $CURRENT_VERSION | cut -d. -f1)
+          MINOR=$(echo $CURRENT_VERSION | cut -d. -f2)
+          PATCH=$(echo $CURRENT_VERSION | cut -d. -f3)
+
+          if [[ "${{ steps.bump_type.outputs.BUMP_TYPE }}" == "major" ]]; then
+            MAJOR=$((MAJOR + 1))
+            MINOR=0
+            PATCH=0
+          elif [[ "${{ steps.bump_type.outputs.BUMP_TYPE }}" == "minor" ]]; then
+            MINOR=$((MINOR + 1))
+            PATCH=0
+          else
+            PATCH=$((PATCH + 1))
+          fi
+
+          NEXT_VERSION="$MAJOR.$MINOR.$PATCH"
+
+          echo "Next version: $NEXT_VERSION"
+          echo "NEXT_VERSION=$NEXT_VERSION" >> $GITHUB_OUTPUT
+
