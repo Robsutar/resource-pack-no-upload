@@ -30,7 +30,10 @@ public class RNUCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-        if (args.length != 1 || !args[0].equals("reload")) return false;
+        if (args.length != 1 || !args[0].equals("reload")) {
+            sender.sendMessage("§cWrong command usage.");
+            return false;
+        }
 
         try {
             plugin.load();
