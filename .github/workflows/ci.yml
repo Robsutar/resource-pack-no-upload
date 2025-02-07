@@ -117,7 +117,7 @@ jobs:
             fi
 
             echo "Appending PR: $PR_TITLE #$PR_NUMBER"
-            OUTPUT="$OUTPUT- $PR_TITLE #$PR_NUMBER$(echo -e '\n')"
+            OUTPUT="$OUTPUT- $PR_TITLE #$PR_NUMBER\n"
           done <<< "$PR_LIST"
 
           echo -e "Find PRs from this version: \n$OUTPUT"
@@ -145,7 +145,6 @@ jobs:
           git push origin main
           git push origin v${{ steps.next_version.outputs.NEXT_VERSION }}
 
-
   release:
     runs-on: ubuntu-latest
     needs: versioning
@@ -168,13 +167,20 @@ jobs:
       - name: Build modules with Gradle
         run: gradle build
 
+      - name: Reading tag message from commit
+        id: get-tag-message
+        run: |
+          # Get release content
+          TAG_MESSAGE=$(git tag -l "v${{ needs.versioning.outputs.next_version }}" --format='%(contents)')
+          echo "body<<EOF" >> $GITHUB_OUTPUT
+          echo "$TAG_MESSAGE" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ needs.versioning.outputs.next_version }}
-          body: |
-            Changes since the last release:
-            ${{ needs.versioning.outputs.list_prs }}"
+          body: ${{ steps.get-tag-message.outputs.body }}
           files: "**/build/libs/*.jar"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
