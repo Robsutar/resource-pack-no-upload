@@ -122,3 +122,13 @@ jobs:
           echo "$OUTPUT" >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"  
 
+      - name: Update version in build.gradle
+        run: |
+          sed -i "s/^version = '[^']*'/version = '${{ steps.next_version.outputs.NEXT_VERSION }}'/" build.gradle
+
+      - name: Commit the version bump
+        run: |
+          git add build.gradle
+          printf "Version ${{ steps.next_version.outputs.NEXT_VERSION }}\n\n${{ steps.list_prs.outputs.OUTPUT }}" > commit_message.txt
+          git commit -F commit_message.txt
+
