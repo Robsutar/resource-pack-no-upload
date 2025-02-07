@@ -1,3 +1,5 @@
+[![Building](https://github.com/Robsutar/resource-pack-no-upload/actions/workflows/building.yml/badge.svg)](https://github.com/Robsutar/resource-pack-no-upload/actions/workflows/building.yml)
+
 # ResourcePackNoUpload Plugin
 
 A Minecraft server plugin that allows server administrators to manage and distribute resource packs efficiently without
