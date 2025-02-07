@@ -5,12 +5,18 @@ import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.File;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Comparator;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 public final class ResourcePackNoUpload extends JavaPlugin {
     private TargetPlatform targetPlatform;
@@ -34,7 +40,6 @@ public final class ResourcePackNoUpload extends JavaPlugin {
 
         Bukkit.getPluginManager().registerEvents(new BukkitListener(this), this);
         Objects.requireNonNull(getCommand("resourcepacknoupload")).setExecutor(new RNUCommand(this));
-
 
         Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
             try {
@@ -87,6 +92,24 @@ public final class ResourcePackNoUpload extends JavaPlugin {
                 throw new ResourcePackLoadException("Already loading");
             resourcePackState = new ResourcePackState.Loading();
 
+            File tempFolder = new File(getDataFolder(), "temp");
+
+            if (tempFolder.exists()) try (Stream<Path> walk = Files.walk(tempFolder.toPath())) {
+                walk.sorted(Comparator.reverseOrder())
+                        .forEach(path -> {
+                            try {
+                                Files.delete(path);
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
+            } catch (Exception e) {
+                throw new ResourcePackLoadException("Failed to delete temp folder.", e);
+            }
+
+            if (!tempFolder.mkdir())
+                throw new ResourcePackLoadException("Failed to create temp folder.");
+
             ConfigurationSection configRaw;
 
             try {
@@ -95,7 +118,7 @@ public final class ResourcePackNoUpload extends JavaPlugin {
                 throw new ResourcePackLoadException("Failed to load configuration file.", e);
             }
             try {
-                config = RNUConfig.deserialize(configRaw);
+                config = RNUConfig.deserialize(tempFolder, configRaw);
             } catch (Exception e) {
                 throw new ResourcePackLoadException("Failed to deserialize configuration from file", e);
             }
