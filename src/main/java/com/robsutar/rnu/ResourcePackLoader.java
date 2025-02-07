@@ -1,15 +1,20 @@
 package com.robsutar.rnu;
 
 import org.bukkit.configuration.ConfigurationSection;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
+import java.nio.file.PathMatcher;
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -40,12 +45,14 @@ public interface ResourcePackLoader {
         switch (type) {
             case "Manual":
                 return new Manual(raw);
-
             case "Merged":
                 return new Merged(tempFolder, raw);
-
             case "Download":
                 return new Download(tempFolder, raw);
+            case "WithMovedFiles":
+                return new WithMovedFiles(tempFolder, raw);
+            case "WithDeletedFiles":
+                return new WithDeletedFiles(tempFolder, raw);
 
             default:
                 throw new IllegalArgumentException("Invalid loader type: " + type);
@@ -92,7 +99,6 @@ public interface ResourcePackLoader {
             }
         }
     }
-
 
     class Download implements ResourcePackLoader {
         private final File zipPath;
@@ -179,6 +185,98 @@ public interface ResourcePackLoader {
                 this.key = key;
                 this.value = value;
             }
+        }
+    }
+
+    class WithMovedFiles implements ResourcePackLoader {
+        private final String folder;
+        private final String destination;
+        private final ResourcePackLoader loader;
+
+        public WithMovedFiles(File tempFolder, ConfigurationSection raw) {
+            folder = Objects.requireNonNull(raw.getString("folder"));
+            destination = Objects.requireNonNull(raw.getString("destination"));
+
+            loader = deserialize(tempFolder, Objects.requireNonNull(raw.getConfigurationSection("loader")));
+        }
+
+        @Override
+        public Map<String, Consumer<ZipOutputStream>> appendFiles() throws Exception {
+            Map<String, Consumer<ZipOutputStream>> output = loader.appendFiles();
+
+            Map<String, String> toMove = new HashMap<>();
+            for (Map.Entry<String, Consumer<ZipOutputStream>> entry : output.entrySet()) {
+                String name = entry.getKey();
+                @Nullable String newName = removeShape(folder, name, false);
+                if (newName != null) {
+                    toMove.put(name, destination + newName);
+                } else {
+                    newName = removeShape(folder, name, true);
+                    if (newName != null) {
+                        toMove.put(name, destination + newName);
+                    }
+                }
+            }
+            for (Map.Entry<String, String> entry : toMove.entrySet()) {
+                Consumer<ZipOutputStream> applier = Objects.requireNonNull(output.remove(entry.getKey()));
+                output.put(entry.getValue(), applier);
+            }
+
+            return output;
+        }
+
+        public @Nullable String removeShape(String shape, String file, boolean greedy) {
+            String[] parts = shape.split("\\?", -1);
+
+            String wildcardRegex = greedy ? "(.*)" : "(.*?)";
+
+            StringBuilder regex = new StringBuilder("^");
+            for (int i = 0; i < parts.length; i++) {
+                regex.append(Pattern.quote(parts[i]));
+                if (i < parts.length - 1) {
+                    regex.append(wildcardRegex);
+                }
+            }
+
+            Pattern pattern = Pattern.compile(regex.toString());
+            Matcher matcher = pattern.matcher(file);
+
+            if (matcher.lookingAt()) {
+                int end = matcher.end();
+                return file.substring(end);
+            }
+            return null;
+        }
+    }
+
+    class WithDeletedFiles implements ResourcePackLoader {
+        private final PathMatcher toDeletePattern;
+        private final ResourcePackLoader loader;
+
+        public WithDeletedFiles(File tempFolder, ConfigurationSection raw) {
+            toDeletePattern = FileSystems.getDefault().getPathMatcher(
+                    "glob:" + Objects.requireNonNull(raw.getString("toDelete"))
+            );
+
+            loader = deserialize(tempFolder, Objects.requireNonNull(raw.getConfigurationSection("loader")));
+        }
+
+        @Override
+        public Map<String, Consumer<ZipOutputStream>> appendFiles() throws Exception {
+            Map<String, Consumer<ZipOutputStream>> output = loader.appendFiles();
+
+            List<String> toRemove = new ArrayList<>();
+            for (Map.Entry<String, Consumer<ZipOutputStream>> entry : output.entrySet()) {
+                String name = entry.getKey();
+                if (toDeletePattern.matches(new File(name).toPath())) {
+                    toRemove.add(name);
+                }
+            }
+            for (String name : toRemove) {
+                Objects.requireNonNull(output.remove(name));
+            }
+
+            return output;
         }
     }
 
