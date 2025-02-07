@@ -173,7 +173,7 @@ jobs:
           tag_name: v${{ needs.versioning.outputs.next_version }}
           body: |
             Changes since the last release:
-            ${{ needs.versioning.outputs.list_prs }}
+            ${{ needs.versioning.outputs.list_prs | replace('\\n', '\n') }}
           files: "**/build/libs/*.jar"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
