@@ -80,6 +80,26 @@ loader:
   ### === End of `WithMovedFiles` type example.
 
 
+  ### === Example for `WithDeletedFiles` type. ===
+
+  ### Ignore the files of the loader if they match with a provided path.
+  # type: WithDeletedFiles
+
+  ### The path to ignored, supports glob file matching. In this example, we delete all
+  ### files that ends with `.md`.
+  # toDelete: "**.md"
+  ### To ignore all the files of a directory:
+  # toDelete:  "assets/all_inside_me_will_be_deleted/**/*"
+  ### To ignore a file a file:
+  # toDelete:  "assets/minecraft/i_will_be_deleted.txt"
+
+  ### This can be any loader, For this loader example we are using simple Manual loader.
+  # loader:
+  #   type: Manual
+  #   folder: "plugins/ResourcePackNoUpload/Manual Pack/"
+
+  ### === End of `WithDeletedFiles` type example.
+
 
   ### === Example for `Merged` type. ===
 
