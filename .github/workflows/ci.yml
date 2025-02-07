@@ -164,16 +164,14 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Build with Gradle
+      - name: Build modules with Gradle
         run: gradle build
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ needs.versioning.outputs.next_version }}
-          body: |
-            Changes since last release:
-            ${{ needs.versioning.outputs.list_prs }}
-          files: build/libs/*.jar
+          body: ${{ needs.versioning.outputs.list_prs }}
+          files: "**/build/libs/*.jar"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
