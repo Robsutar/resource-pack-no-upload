@@ -1,0 +1,142 @@
+name: Versioning
+
+on:
+  pull_request:
+    types:
+      - closed
+
+jobs:
+  process-versioning:
+    if: >-
+      github.event.pull_request.merged == true &&
+      contains(github.event.pull_request.labels.*.name, 'patch-change') ||
+      contains(github.event.pull_request.labels.*.name, 'minor-change') ||
+      contains(github.event.pull_request.labels.*.name, 'major-change')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Log PR Information
+        run: |
+          echo "Closed PR with version label, creating new version."
+          echo "PR Title: ${{ github.event.pull_request.title }}"
+          echo "PR State: ${{ github.event.pull_request.state }}"
+
+          LABELS=$(echo '${{ toJson(github.event.pull_request.labels) }}' | jq -r '.[].name')
+          echo "Labels found: $LABELS"
+
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Configure GitHub CLI
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+
+      - name: Determine version bump type
+        id: bump_type
+        run: |
+          LABELS=$(echo '${{ toJson(github.event.pull_request.labels) }}' | jq -r '.[].name')
+
+          if echo "$LABELS" | grep -q "major-change"; then
+            echo "BUMP_TYPE=major" >> $GITHUB_OUTPUT
+          elif echo "$LABELS" | grep -q "minor-change"; then
+            echo "BUMP_TYPE=minor" >> $GITHUB_OUTPUT
+          else
+            echo "BUMP_TYPE=patch" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Calculate next version
+        id: next_version
+        run: |
+          CURRENT_VERSION=$(grep "^version = '" build.gradle | head -n1 | awk -F"'" '{print $2}')
+          echo "Current version: $CURRENT_VERSION"
+
+          MAJOR=$(echo $CURRENT_VERSION | cut -d. -f1)
+          MINOR=$(echo $CURRENT_VERSION | cut -d. -f2)
+          PATCH=$(echo $CURRENT_VERSION | cut -d. -f3)
+
+          if [[ "${{ steps.bump_type.outputs.BUMP_TYPE }}" == "major" ]]; then
+            MAJOR=$((MAJOR + 1))
+            MINOR=0
+            PATCH=0
+          elif [[ "${{ steps.bump_type.outputs.BUMP_TYPE }}" == "minor" ]]; then
+            MINOR=$((MINOR + 1))
+            PATCH=0
+          else
+            PATCH=$((PATCH + 1))
+          fi
+
+          NEXT_VERSION="$MAJOR.$MINOR.$PATCH"
+
+          echo "Next version: $NEXT_VERSION"
+          echo "NEXT_VERSION=$NEXT_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Get previous merged PRs until last version
+        id: list_prs
+        run: |
+          CURRENT_PR=${{ github.event.pull_request.number }}
+
+          BUMP_CONTAINING=""
+          if [[ "${{ steps.bump_type.outputs.BUMP_TYPE }}" == "major" ]]; then
+            BUMP_CONTAINING="major-change"
+          elif [[ "${{ steps.bump_type.outputs.BUMP_TYPE }}" == "minor" ]]; then
+            BUMP_CONTAINING="minor-change|major-change"
+          else
+            BUMP_CONTAINING="patch-change|minor-change|major-change"
+          fi
+
+          echo "Current PR: #$CURRENT_PR, Bump Containing: $BUMP_CONTAINING"
+
+          echo "Searching merged PRs..."
+          OUTPUT=""
+          
+          PR_LIST=$(gh pr list --state merged --json number,title,labels --limit 100 || echo "[]")
+          PR_LIST=$(echo "$PR_LIST" | jq -c '.[]')
+
+          while read -r pr; do
+            PR_NUMBER=$(echo "$pr" | jq '.number')
+            PR_TITLE=$(echo "$pr" | jq -r '.title')
+            PR_LABELS=$(echo "$pr" | jq -r '.labels | map(.name) | join(", ")')
+
+            echo "Reading PR: $PR_TITLE #$PR_NUMBER"
+
+            if echo "$PR_LABELS" | grep -q -E "$BUMP_CONTAINING"; then
+              if [ $PR_NUMBER -ne $CURRENT_PR ]; then
+                echo "Find PR of other version: #$PR_NUMBER ($PR_LABELS). Stopping search."
+                break
+              fi
+            fi
+
+            echo "Appending PR: $PR_TITLE #$PR_NUMBER"
+            OUTPUT="$OUTPUT- $PR_TITLE #$PR_NUMBER\n"
+          done <<< "$PR_LIST"
+
+          echo -e "Find PRs from this version: \n$OUTPUT"
+          
+          echo "OUTPUT<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$OUTPUT" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"  
+
+      - name: Update version in build.gradle
+        run: |
+          sed -i "s/^version = '[^']*'/version = '${{ steps.next_version.outputs.NEXT_VERSION }}'/" build.gradle
+
+      - name: Commit the version bump
+        run: |
+          git add build.gradle
+          printf "Version ${{ steps.next_version.outputs.NEXT_VERSION }}\n\n${{ steps.list_prs.outputs.OUTPUT }}" > commit_message.txt
+          git commit -F commit_message.txt
+
+      - name: Create Git tag
+        run: |
+          git tag v${{ steps.next_version.outputs.NEXT_VERSION }}
+
+      - name: Push changes and tag
+        run: |
+          git push origin main
+          git push origin v${{ steps.next_version.outputs.NEXT_VERSION }}
