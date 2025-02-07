@@ -7,7 +7,7 @@ on:
       - completed
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -21,8 +21,10 @@ jobs:
         id: get-tag-message
         run: |
           TAG_NAME=$(git describe --tags --abbrev=0)
-          TAG_MESSAGE=$(git tag -l $TAG_NAME --format='%(contents)')
-          echo "body=$TAG_MESSAGE" >> $GITHUB_OUTPUT
+          TAG_MESSAGE=$(git tag -l "$TAG_NAME" --format='%(contents)')
+          echo "body<<EOF" >> $GITHUB_OUTPUT
+          echo "$TAG_MESSAGE" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Setup Java
         uses: actions/setup-java@v4
