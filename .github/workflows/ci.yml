@@ -1,4 +1,4 @@
-name: Versioning
+name: CI
 
 on:
   pull_request:
@@ -6,7 +6,7 @@ on:
       - closed
 
 jobs:
-  process-versioning:
+  versioning:
     if: >-
       github.event.pull_request.merged == true &&
       contains(github.event.pull_request.labels.*.name, 'patch-change') ||
@@ -53,7 +53,7 @@ jobs:
       - name: Calculate next version
         id: next_version
         run: |
-          CURRENT_VERSION=$(grep "^version = '" build.gradle | head -n1 | awk -F"'" '{print $2}')
+          CURRENT_VERSION=$(grep "version = '" build.gradle | head -n1 | awk -F"'" '{print $2}')
           echo "Current version: $CURRENT_VERSION"
 
           MAJOR=$(echo $CURRENT_VERSION | cut -d. -f1)
@@ -124,7 +124,7 @@ jobs:
 
       - name: Update version in build.gradle
         run: |
-          sed -i "s/^version = '[^']*'/version = '${{ steps.next_version.outputs.NEXT_VERSION }}'/" build.gradle
+          sed -i "0,/version = '[^']*'/s//version = '${{ steps.next_version.outputs.NEXT_VERSION }}'/" build.gradle
 
       - name: Commit the version bump
         run: |
@@ -140,3 +140,50 @@ jobs:
         run: |
           git push origin main
           git push origin v${{ steps.next_version.outputs.NEXT_VERSION }}
+
+  release:
+    runs-on: ubuntu-latest
+    needs: versioning
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Reading tag message from commit
+        id: get-tag-info
+        run: |
+          # Get tag name
+          TAG_NAME=$(git describe --tags --abbrev=0)
+          echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
+
+          echo "Tag: $TAG_NAME"
+
+          # Get release content
+          TAG_MESSAGE=$(git tag -l "$TAG_NAME" --format='%(contents)')
+          echo "body<<EOF" >> $GITHUB_OUTPUT
+          echo "$TAG_MESSAGE" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build with Gradle
+        run: gradle build
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.get-tag-info.outputs.tag_name }}
+          body: |
+            ${{ steps.get-tag-info.outputs.body }}
+          files: build/libs/*.jar
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
