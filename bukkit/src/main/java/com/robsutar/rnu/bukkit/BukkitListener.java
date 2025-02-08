@@ -53,12 +53,14 @@ public class BukkitListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerJoin(PlayerJoinEvent event) {
-        Player player = event.getPlayer();
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            Player player = event.getPlayer();
+            if (!pending.containsKey(player) && plugin.resourcePackState() instanceof ResourcePackState.Loaded) {
+                ResourcePackState.Loaded loaded = (ResourcePackState.Loaded) plugin.resourcePackState();
+                addPending(player, loaded.resourcePackInfo());
+            }
+        }, plugin.config().resendingDelay());
 
-        if (plugin.resourcePackState() instanceof ResourcePackState.Loaded) {
-            ResourcePackState.Loaded loaded = (ResourcePackState.Loaded) plugin.resourcePackState();
-            addPending(player, loaded.resourcePackInfo());
-        }
     }
 
     @EventHandler(priority = EventPriority.MONITOR)

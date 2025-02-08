@@ -56,12 +56,13 @@ public class VelocityListener {
     @Subscribe
     public void onPlayerJoin(ServerPostConnectEvent event) {
         if (event.getPreviousServer() == null) {
-            Player player = event.getPlayer();
-
-            if (plugin.resourcePackState() instanceof ResourcePackState.Loaded) {
-                ResourcePackState.Loaded loaded = (ResourcePackState.Loaded) plugin.resourcePackState();
-                addPending(player, loaded.resourcePackInfo());
-            }
+            plugin.getServer().getScheduler().buildTask(plugin, () -> {
+                Player player = event.getPlayer();
+                if (!pending.containsKey(player) && plugin.resourcePackState() instanceof ResourcePackState.Loaded) {
+                    ResourcePackState.Loaded loaded = (ResourcePackState.Loaded) plugin.resourcePackState();
+                    addPending(player, loaded.resourcePackInfo());
+                }
+            }).delay(plugin.config().sendingDelay() * 50L, TimeUnit.MILLISECONDS).schedule();
         }
     }
 
