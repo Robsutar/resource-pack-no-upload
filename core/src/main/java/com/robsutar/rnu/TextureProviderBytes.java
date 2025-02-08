@@ -87,7 +87,10 @@ public abstract class TextureProviderBytes {
 
             beforeLock.run();
 
-            b.closeFuture().sync();
+            try {
+                b.closeFuture().sync();
+            } catch (InterruptedException ignored) {
+            }
         } finally {
             bossGroup.shutdownGracefully();
             workerGroup.shutdownGracefully();
