@@ -6,8 +6,8 @@ import com.robsutar.rnu.ResourcePackNoUpload;
 import com.robsutar.rnu.ResourcePackState;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
-import com.velocitypowered.api.event.connection.PostLoginEvent;
 import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
+import com.velocitypowered.api.event.player.ServerPostConnectEvent;
 import com.velocitypowered.api.proxy.Player;
 
 import java.util.HashMap;
@@ -52,13 +52,16 @@ public class VelocityListener {
         );
     }
 
+    @SuppressWarnings("UnstableApiUsage")
     @Subscribe
-    public void onPlayerJoin(PostLoginEvent event) {
-        Player player = event.getPlayer();
+    public void onPlayerJoin(ServerPostConnectEvent event) {
+        if (event.getPreviousServer() == null) {
+            Player player = event.getPlayer();
 
-        if (plugin.resourcePackState() instanceof ResourcePackState.Loaded) {
-            ResourcePackState.Loaded loaded = (ResourcePackState.Loaded) plugin.resourcePackState();
-            addPending(player, loaded.resourcePackInfo());
+            if (plugin.resourcePackState() instanceof ResourcePackState.Loaded) {
+                ResourcePackState.Loaded loaded = (ResourcePackState.Loaded) plugin.resourcePackState();
+                addPending(player, loaded.resourcePackInfo());
+            }
         }
     }
 
