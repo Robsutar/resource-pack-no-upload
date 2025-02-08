@@ -5,6 +5,7 @@ import com.robsutar.rnu.ResourcePackInfo;
 import com.robsutar.rnu.ResourcePackNoUpload;
 import com.robsutar.rnu.ResourcePackState;
 import com.velocitypowered.api.event.Subscribe;
+import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.connection.PostLoginEvent;
 import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
 import com.velocitypowered.api.proxy.Player;
@@ -59,6 +60,13 @@ public class VelocityListener {
             ResourcePackState.Loaded loaded = (ResourcePackState.Loaded) plugin.resourcePackState();
             addPending(player, loaded.resourcePackInfo());
         }
+    }
+
+    @Subscribe
+    public void onPlayerQuit(DisconnectEvent event) {
+        Player player = event.getPlayer();
+
+        pending.remove(player);
     }
 
     @Subscribe

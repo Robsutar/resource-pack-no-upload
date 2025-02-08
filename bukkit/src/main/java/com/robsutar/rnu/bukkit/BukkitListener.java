@@ -10,6 +10,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerResourcePackStatusEvent;
 
 import java.lang.reflect.InvocationTargetException;
@@ -58,6 +59,13 @@ public class BukkitListener implements Listener {
             ResourcePackState.Loaded loaded = (ResourcePackState.Loaded) plugin.resourcePackState();
             addPending(player, loaded.resourcePackInfo());
         }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        Player player = event.getPlayer();
+
+        pending.remove(player);
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
