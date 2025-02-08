@@ -30,7 +30,7 @@ public class BukkitListener implements Listener {
         this.plugin = plugin;
         setResourcePackFunction = extractResourcePackFunction();
 
-        Bukkit.getScheduler().runTaskTimer(plugin, this::checkPending, 40, 40);
+        Bukkit.getScheduler().runTaskTimer(plugin, this::checkPending, plugin.config().resendingDelay(), plugin.config().resendingDelay());
     }
 
     private void checkPending() {

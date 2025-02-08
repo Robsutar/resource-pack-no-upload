@@ -23,7 +23,7 @@ public class VelocityListener {
         this.plugin = plugin;
 
         plugin.getServer().getScheduler().buildTask(plugin, this::checkPending)
-                .repeat(40 * 50, TimeUnit.MILLISECONDS)
+                .repeat(plugin.config().resendingDelay() * 50L, TimeUnit.MILLISECONDS)
                 .schedule();
     }
 
