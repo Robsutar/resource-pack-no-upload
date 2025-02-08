@@ -61,7 +61,7 @@ public abstract class TextureProviderBytes {
 
                                         response.headers()
                                                 .set(HttpHeaderNames.CONTENT_TYPE, "application/zip")
-                                                .set(HttpHeaderNames.CONTENT_DISPOSITION, "attachment; filename=\"resourcepack.zip\"")
+                                                .set(HttpHeaderNames.CONTENT_DISPOSITION, "attachment; filename=\"pack.zip\"")
                                                 .set(HttpHeaderNames.CONTENT_LENGTH, bytes.length);
 
                                         ctx.writeAndFlush(response)
@@ -87,7 +87,10 @@ public abstract class TextureProviderBytes {
 
             beforeLock.run();
 
-            b.closeFuture().sync();
+            try {
+                b.closeFuture().sync();
+            } catch (InterruptedException ignored) {
+            }
         } finally {
             bossGroup.shutdownGracefully();
             workerGroup.shutdownGracefully();

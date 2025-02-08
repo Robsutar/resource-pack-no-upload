@@ -10,6 +10,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerResourcePackStatusEvent;
 
 import java.lang.reflect.InvocationTargetException;
@@ -29,7 +30,7 @@ public class BukkitListener implements Listener {
         this.plugin = plugin;
         setResourcePackFunction = extractResourcePackFunction();
 
-        Bukkit.getScheduler().runTaskTimer(plugin, this::checkPending, 40, 40);
+        Bukkit.getScheduler().runTaskTimer(plugin, this::checkPending, plugin.config().resendingDelay(), plugin.config().resendingDelay());
     }
 
     private void checkPending() {
@@ -52,12 +53,21 @@ public class BukkitListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerJoin(PlayerJoinEvent event) {
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            Player player = event.getPlayer();
+            if (!pending.containsKey(player) && plugin.resourcePackState() instanceof ResourcePackState.Loaded) {
+                ResourcePackState.Loaded loaded = (ResourcePackState.Loaded) plugin.resourcePackState();
+                addPending(player, loaded.resourcePackInfo());
+            }
+        }, plugin.config().resendingDelay());
+
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onPlayerQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
 
-        if (plugin.resourcePackState() instanceof ResourcePackState.Loaded) {
-            ResourcePackState.Loaded loaded = (ResourcePackState.Loaded) plugin.resourcePackState();
-            addPending(player, loaded.resourcePackInfo());
-        }
+        pending.remove(player);
     }
 
     @EventHandler(priority = EventPriority.MONITOR)

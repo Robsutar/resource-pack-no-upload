@@ -56,7 +56,7 @@ loader:
 
 <details>
   <summary><strong>Download</strong> downloads from web, with http headers</summary>
-  Downloads the resourcepack from a link.
+  Downloads the resource pack from a link.
   At first, it would be somewhat against the plugin's purpose, but this loader also
   supports http headers for the download request, allowing you to download the
   resource,  pack with private keys, witch is not supported directly by the minecraft client.
