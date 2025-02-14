@@ -6,16 +6,13 @@ on:
       - closed
 
 jobs:
-  versioning:
+  version-publish:
     if: >-
       github.event.pull_request.merged == true &&
       contains(github.event.pull_request.labels.*.name, 'patch-change') ||
       contains(github.event.pull_request.labels.*.name, 'minor-change') ||
       contains(github.event.pull_request.labels.*.name, 'major-change')
     runs-on: ubuntu-latest
-    outputs:
-      next_version: ${{ steps.next_version.outputs.NEXT_VERSION }}
-      list_prs: ${{ steps.list_prs.outputs.OUTPUT }}
 
     steps:
       - name: Log PR Information
@@ -145,16 +142,6 @@ jobs:
           git push origin main
           git push origin v${{ steps.next_version.outputs.NEXT_VERSION }}
 
-  release:
-    runs-on: ubuntu-latest
-    needs: versioning
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          fetch-tags: true
-
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
@@ -171,7 +158,7 @@ jobs:
         id: get-tag-message
         run: |
           # Get release content
-          TAG_MESSAGE=$(git tag -l "v${{ needs.versioning.outputs.next_version }}" --format='%(contents)')
+          TAG_MESSAGE=$(git tag -l "v${{ steps.next_version.outputs.NEXT_VERSION }}" --format='%(contents)')
           echo "body<<EOF" >> $GITHUB_OUTPUT
           echo "$TAG_MESSAGE" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
@@ -179,7 +166,7 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ needs.versioning.outputs.next_version }}
+          tag_name: v${{ steps.next_version.outputs.NEXT_VERSION }}
           body: ${{ steps.get-tag-message.outputs.body }}
           files: "**/build/libs/*.jar"
         env:
