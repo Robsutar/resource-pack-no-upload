@@ -98,6 +98,7 @@ loader:
   # the release, the content of the resource pack can be inside another download file,
   # we use WithMovedFiles to adjust this.
   loader:
+    type: Download
     url: https://api.github.com/repos/Robsutar/super-cool-pack/zipball
     headers:
       - key: "Authorization"
