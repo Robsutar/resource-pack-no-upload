@@ -1,26 +1,51 @@
 plugins {
-    alias(libs.plugins.shadow)
+    id 'fabric-loom' version '1.9-SNAPSHOT'
+    id 'maven-publish'
 }
 
-repositories {
-    maven {
-        name 'papermc'
-        url 'https://repo.papermc.io/repository/maven-public/'
-    }
+base {
+    archivesName = project.archives_base_name
 }
 
 dependencies {
-    implementation project(':core')
+    minecraft "com.mojang:minecraft:1.16.5"
+    mappings "net.fabricmc:yarn:1.16.5+build.10:v2"
+    modImplementation "net.fabricmc:fabric-loader:0.16.10"
+
+    // Fabric API. This is technically optional, but you probably want it anyway.
+    modImplementation "net.fabricmc.fabric-api:fabric-api:0.42.0+1.16"
 }
 
-shadowJar {
-    def shadowPath = project.group.toString() + '.shadow.'
+processResources {
+    archivesBaseName = project.archives_base_name
 
-    archiveClassifier.set('')
-    relocate 'io.netty', shadowPath + 'io.netty'
-    minimize()
+    def props = [ID: archivesBaseName, NAME: rootProject.name, VERSION: version, PACKAGE: project.group.toString()]
+    inputs.properties props
+    filteringCharset 'UTF-8'
+    filesMatching('fabric.mod.json') {
+        expand props
+    }
 }
 
-// Disable jar and replace with shadowJar
-jar.enabled = false
-assemble.dependsOn(shadowJar)
+tasks.withType(JavaCompile).configureEach {
+    it.options.release = 8
+}
+
+java {
+    withSourcesJar()
+
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+// configure the maven publication
+publishing {
+    archivesBaseName = project.archives_base_name
+
+    publications {
+        create("mavenJava", MavenPublication) {
+            artifactId = archivesBaseName
+            from components.java
+        }
+    }
+}
