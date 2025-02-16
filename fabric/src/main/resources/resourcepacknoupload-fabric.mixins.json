@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "package": "com.robsutar.rnu.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+    "MixinServerGamePacketListenerImpl"
+  ],
+  "plugin": "com.robsutar.rnu.internal.MixinConfigPlugin",
+  "server": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

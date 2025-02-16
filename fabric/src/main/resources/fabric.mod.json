@@ -23,5 +23,8 @@
   },
   "suggests": {
     "another-mod": "*"
-  }
+  },
+  "mixins": [
+    "resourcepacknoupload-fabric.mixins.json"
+  ]
 }
