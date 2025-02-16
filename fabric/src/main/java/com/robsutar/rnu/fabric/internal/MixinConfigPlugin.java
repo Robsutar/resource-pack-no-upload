@@ -1,4 +1,4 @@
-package com.robsutar.rnu.internal;
+package com.robsutar.rnu.fabric.internal;
 
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;

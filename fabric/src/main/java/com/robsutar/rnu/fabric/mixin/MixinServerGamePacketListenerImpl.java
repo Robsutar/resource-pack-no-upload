@@ -1,4 +1,4 @@
-package com.robsutar.rnu.mixin;
+package com.robsutar.rnu.fabric.mixin;
 
 import net.minecraft.network.protocol.game.ServerboundResourcePackPacket;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
@@ -17,7 +17,7 @@ public class MixinServerGamePacketListenerImpl {
         // Unfortunately, the ServerboundResourcePackPacket#action field is not publicly accessible, so here we use a
         // bit of reflection to expose this field.
         // Since ServerboundResourcePackPacket only has one field, this loop only runs once.
-        
+
         for (Field field : packet.getClass().getDeclaredFields()) {
             try {
                 field.setAccessible(true);
