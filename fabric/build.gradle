@@ -1,6 +1,7 @@
 plugins {
     id 'fabric-loom' version '1.9-SNAPSHOT'
     id 'maven-publish'
+    alias(libs.plugins.shadow)
 }
 
 base {
@@ -8,6 +9,9 @@ base {
 }
 
 dependencies {
+    implementation "org.yaml:snakeyaml:2.3"
+    shadow "org.yaml:snakeyaml:2.3"
+
     minecraft "com.mojang:minecraft:1.16.5"
     mappings(loom.layered {
         officialMojangMappings()
@@ -17,6 +21,20 @@ dependencies {
 
     // Fabric API. This is technically optional, but you probably want it anyway.
     modImplementation "net.fabricmc.fabric-api:fabric-api:0.42.0+1.16"
+}
+
+shadowJar {
+    configurations = [project.configurations.shadow]
+
+    def shadowPath = project.group.toString() + '.shadow.'
+
+    relocate 'org.yaml.snakeyaml', shadowPath + "org.yaml.snakeyaml"
+}
+
+remapJar {
+    dependsOn shadowJar
+    mustRunAfter shadowJar
+    inputFile = shadowJar.archiveFile.get().asFile
 }
 
 processResources {

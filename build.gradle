@@ -15,6 +15,7 @@ subprojects {
         dependsOn jar
         from(layout.buildDirectory.dir("libs").get()) {
             include "*.jar"
+            exclude "*-all.jar"
             exclude "*-sources.jar"
         }
         into(layout.buildDirectory.dir("libs").get().toString() + "/publish")
