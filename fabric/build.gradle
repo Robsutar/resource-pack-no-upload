@@ -9,6 +9,8 @@ base {
 }
 
 dependencies {
+    implementation project(":core")
+    shadow libs.netty
     implementation "org.yaml:snakeyaml:2.3"
     shadow "org.yaml:snakeyaml:2.3"
 
@@ -28,6 +30,7 @@ shadowJar {
 
     def shadowPath = project.group.toString() + '.shadow.'
 
+    relocate 'io.netty', shadowPath + "io.netty"
     relocate 'org.yaml.snakeyaml', shadowPath + "org.yaml.snakeyaml"
 }
 
