@@ -1,17 +1,17 @@
 package com.robsutar.rnu;
 
+import java.net.URI;
 import java.util.UUID;
 
 public final class ResourcePackInfo {
     private final UUID id;
-    private final String uri;
     private final byte[] hash;
     private final String prompt;
     private final String hashStr;
+    private final String uri;
 
-    public ResourcePackInfo(UUID id, String uri, byte[] hash, String prompt) {
+    public ResourcePackInfo(UUID id, byte[] hash, String prompt, URI uriRoot) {
         this.id = id;
-        this.uri = uri;
         this.hash = hash;
         this.prompt = prompt;
 
@@ -21,14 +21,12 @@ public final class ResourcePackInfo {
         }
 
         hashStr = hexString.toString();
+
+        this.uri = uriRoot + "/" + hashStr + ".zip";
     }
 
     public UUID id() {
         return id;
-    }
-
-    public String uri() {
-        return uri;
     }
 
     public byte[] hash() {
@@ -41,5 +39,9 @@ public final class ResourcePackInfo {
 
     public String hashStr() {
         return hashStr;
+    }
+
+    public String uri() {
+        return uri;
     }
 }

@@ -69,26 +69,29 @@ public abstract class TextureProviderBytes {
             ResourcePackState state = state();
             if (state instanceof ResourcePackState.Loaded) {
                 ResourcePackState.Loaded loaded = (ResourcePackState.Loaded) state;
-                byte[] bytes = loaded.bytes();
+                if (loaded.resourcePackInfo().uri().endsWith(request.uri())) {
 
-                FullHttpResponse response = new DefaultFullHttpResponse(
-                        HttpVersion.HTTP_1_1,
-                        HttpResponseStatus.OK,
-                        Unpooled.wrappedBuffer(bytes)
-                );
+                    byte[] bytes = loaded.bytes();
 
-                response.headers()
-                        .set(HttpHeaderNames.CONTENT_TYPE, "application/zip")
-                        .set(HttpHeaderNames.CONTENT_DISPOSITION, "attachment; filename=\"pack.zip\"")
-                        .set(HttpHeaderNames.CONTENT_LENGTH, bytes.length);
+                    FullHttpResponse response = new DefaultFullHttpResponse(
+                            HttpVersion.HTTP_1_1,
+                            HttpResponseStatus.OK,
+                            Unpooled.wrappedBuffer(bytes)
+                    );
 
-                ctx.writeAndFlush(response)
-                        .addListener(ChannelFutureListener.CLOSE);
-            } else {
-                DefaultFullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NOT_FOUND);
-                ctx.writeAndFlush(response)
-                        .addListener(ChannelFutureListener.CLOSE);
+                    response.headers()
+                            .set(HttpHeaderNames.CONTENT_TYPE, "application/zip")
+                            .set(HttpHeaderNames.CONTENT_DISPOSITION, "attachment; filename=\"pack.zip\"")
+                            .set(HttpHeaderNames.CONTENT_LENGTH, bytes.length);
+
+                    ctx.writeAndFlush(response)
+                            .addListener(ChannelFutureListener.CLOSE);
+                    return;
+                }
             }
+            DefaultFullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NOT_FOUND);
+            ctx.writeAndFlush(response)
+                    .addListener(ChannelFutureListener.CLOSE);
         }
 
         @Override

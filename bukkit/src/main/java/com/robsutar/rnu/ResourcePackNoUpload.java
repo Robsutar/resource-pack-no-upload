@@ -139,9 +139,9 @@ public final class ResourcePackNoUpload extends JavaPlugin {
 
             ResourcePackInfo resourcePackInfo = new ResourcePackInfo(
                     UUID.randomUUID(),
-                    textureProviderBytes.uri().toString(),
                     hash,
-                    config.prompt()
+                    config.prompt(),
+                    textureProviderBytes.uri()
             );
 
             ResourcePackState.Loaded newState = new ResourcePackState.Loaded(resourcePackInfo, bytes);
