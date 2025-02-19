@@ -11,6 +11,8 @@ import net.minecraft.commands.CommandSourceStack;
 public class RNUCommand extends LiteralArgumentBuilder<CommandSourceStack> {
     public RNUCommand(InitializeHook hook, String literal) {
         super(literal);
+        requires(source -> source.hasPermission(2));
+
         then(LiteralArgumentBuilder.<CommandSourceStack>literal("reload").executes((context) -> {
             ResourcePackNoUpload serverMod = hook.serverMod();
             if (serverMod == null) return 0;

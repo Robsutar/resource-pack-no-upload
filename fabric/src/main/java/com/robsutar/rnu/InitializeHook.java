@@ -49,7 +49,9 @@ public class InitializeHook implements ModInitializer {
         CommandRegistrationCallback.EVENT.register((dispatcher, environment) -> {
             RNUCommand command = new RNUCommand(this, "resourcepacknoupload");
             LiteralCommandNode<CommandSourceStack> node = dispatcher.register(command);
-            dispatcher.register(LiteralArgumentBuilder.<CommandSourceStack>literal("rnu").redirect(node));
+            dispatcher.register(LiteralArgumentBuilder.<CommandSourceStack>literal("rnu")
+                    .requires(source -> source.hasPermission(2))
+                    .redirect(node));
         });
 
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
