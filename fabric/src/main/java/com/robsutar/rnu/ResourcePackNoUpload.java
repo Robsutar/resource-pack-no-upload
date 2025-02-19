@@ -72,6 +72,7 @@ public class ResourcePackNoUpload {
     }
 
     public void onDisable() {
+        textureProviderBytes.close();
         scheduler.closeAndCancelPending();
     }
 

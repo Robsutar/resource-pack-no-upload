@@ -14,6 +14,7 @@ import java.net.URI;
 public abstract class TextureProviderBytes {
     private final InetSocketAddress address;
     private final URI uri;
+    private Channel channel;
 
     public TextureProviderBytes(String addressStr, int port) {
         address = new InetSocketAddress(addressStr, port);
@@ -35,7 +36,7 @@ public abstract class TextureProviderBytes {
         EventLoopGroup workerGroup = new NioEventLoopGroup();
 
         try {
-            Channel b = new ServerBootstrap()
+            channel = new ServerBootstrap()
                     .group(bossGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
                     .childHandler(new ChannelInitializer<SocketChannel>() {
@@ -54,12 +55,18 @@ public abstract class TextureProviderBytes {
             beforeLock.run();
 
             try {
-                b.closeFuture().sync();
+                channel.closeFuture().sync();
             } catch (InterruptedException ignored) {
             }
         } finally {
             bossGroup.shutdownGracefully();
             workerGroup.shutdownGracefully();
+        }
+    }
+
+    public void close() {
+        if (channel != null) {
+            channel.close();
         }
     }
 

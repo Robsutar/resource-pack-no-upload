@@ -9,6 +9,7 @@ import com.robsutar.rnu.velocity.VelocityUtil;
 import com.velocitypowered.api.command.CommandMeta;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
+import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
 import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.proxy.ProxyServer;
 import net.kyori.adventure.text.Component;
@@ -86,6 +87,11 @@ public final class ResourcePackNoUpload {
                 throw new IllegalStateException("Failed to bind texture provider bytes", e);
             }
         }).schedule();
+    }
+
+    @Subscribe
+    public void onDisable(ProxyShutdownEvent event) {
+        textureProviderBytes.close();
     }
 
     private TextureProviderBytes loadTextureProviderBytes() {

@@ -55,6 +55,11 @@ public final class ResourcePackNoUpload extends JavaPlugin {
         });
     }
 
+    @Override
+    public void onDisable() {
+        textureProviderBytes.close();
+    }
+
     private TextureProviderBytes loadTextureProviderBytes() {
         Map<String, Object> raw = BukkitUtil.loadOrCreateConfig(this, "server.yml");
 
