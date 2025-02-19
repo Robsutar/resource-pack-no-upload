@@ -10,7 +10,6 @@ import net.minecraft.server.level.ServerPlayer;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 public class FabricListener {
     private final ResourcePackNoUpload serverMod;
@@ -20,9 +19,7 @@ public class FabricListener {
     public FabricListener(ResourcePackNoUpload serverMod) {
         this.serverMod = serverMod;
 
-        serverMod.getServer().getScheduler().buildTask(serverMod, this::checkPending)
-                .repeat(serverMod.config().resendingDelay() * 50L, TimeUnit.MILLISECONDS)
-                .schedule();
+        serverMod.getScheduler().repeat(this::checkPending, serverMod.config().resendingDelay(), serverMod.config().resendingDelay());
     }
 
     private void checkPending() {
@@ -40,7 +37,7 @@ public class FabricListener {
 
     private void addPending(ServerPlayer player, ResourcePackInfo resourcePackInfo) {
         pending.put(player, System.currentTimeMillis());
-        player.clearResourcePacks();
+        //player.clearResourcePacks();
         player.connection.send(new ClientboundResourcePackPacket(
                 resourcePackInfo.uri(),
                 resourcePackInfo.hashStr()
@@ -48,12 +45,12 @@ public class FabricListener {
     }
 
     public void onPlayerJoin(ServerPlayer player) {
-        serverMod.getServer().getScheduler().buildTask(serverMod, () -> {
+        serverMod.getScheduler().repeat(() -> {
             if (!pending.containsKey(player) && serverMod.resourcePackState() instanceof ResourcePackState.Loaded) {
                 ResourcePackState.Loaded loaded = (ResourcePackState.Loaded) serverMod.resourcePackState();
                 addPending(player, loaded.resourcePackInfo());
             }
-        }).delay(serverMod.config().sendingDelay() * 50L, TimeUnit.MILLISECONDS).schedule();
+        }, serverMod.config().sendingDelay(), serverMod.config().sendingDelay());
     }
 
     public void onPlayerQuit(ServerPlayer player) {
