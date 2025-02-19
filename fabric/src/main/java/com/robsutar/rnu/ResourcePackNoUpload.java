@@ -1,15 +1,9 @@
 package com.robsutar.rnu;
 
-import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import com.mojang.brigadier.tree.LiteralCommandNode;
-import com.robsutar.rnu.fabric.FabricListener;
 import com.robsutar.rnu.fabric.FabricUtil;
-import com.robsutar.rnu.fabric.RNUCommand;
 import com.robsutar.rnu.fabric.RNUPackLoadedCallback;
 import com.robsutar.rnu.util.OC;
-import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import org.jetbrains.annotations.NotNull;
@@ -58,13 +52,6 @@ public class ResourcePackNoUpload {
             throw new RuntimeException("Initial loading failed, and the initial configuration could not be loaded, disabling plugin.", e);
         }
 
-        new FabricListener(this).register();
-        CommandRegistrationCallback.EVENT.register((dispatcher, environment) -> {
-            RNUCommand command = new RNUCommand(this, "resourcepacknoupload");
-            LiteralCommandNode<CommandSourceStack> node = dispatcher.register(command);
-            dispatcher.register(LiteralArgumentBuilder.<CommandSourceStack>literal("rnu").redirect(node));
-        });
-
         CompletableFuture.runAsync(() -> {
             try {
                 textureProviderBytes.run(() -> server.execute(() -> {
@@ -79,7 +66,7 @@ public class ResourcePackNoUpload {
     }
 
     public void onDisable() {
-        
+
     }
 
     private TextureProviderBytes loadTextureProviderBytes() {
