@@ -50,6 +50,18 @@ public class SimpleScheduler {
         pendingTasks.put(id, taskHandle);
     }
 
+    public void runLater(Runnable runnable, int delay) {
+        if (closed)
+            throw new IllegalStateException("Attempt to schedule an later task with the closed scheduler");
+
+        int id = openPendingTaskId++;
+        ScheduledFuture<?> taskHandle = scheduler.schedule(
+                () -> server.executeBlocking(runnable),
+                delay * 50L, TimeUnit.MILLISECONDS
+        );
+        pendingTasks.put(id, taskHandle);
+    }
+
     public void closeAndCancelPending() {
         if (closed) throw new IllegalStateException("Scheduler already closed");
         closed = true;

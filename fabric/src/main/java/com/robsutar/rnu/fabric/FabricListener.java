@@ -45,12 +45,12 @@ public class FabricListener {
     }
 
     public void onPlayerJoin(ServerPlayer player) {
-        serverMod.getScheduler().repeat(() -> {
+        serverMod.getScheduler().runLater(() -> {
             if (!pending.containsKey(player) && serverMod.resourcePackState() instanceof ResourcePackState.Loaded) {
                 ResourcePackState.Loaded loaded = (ResourcePackState.Loaded) serverMod.resourcePackState();
                 addPending(player, loaded.resourcePackInfo());
             }
-        }, serverMod.config().sendingDelay(), serverMod.config().sendingDelay());
+        }, serverMod.config().sendingDelay());
     }
 
     public void onPlayerQuit(ServerPlayer player) {
