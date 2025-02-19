@@ -12,10 +12,13 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Objects;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class InitializeHook implements ModInitializer {
     private static InitializeHook instance;
+
+    private final Logger logger = Logger.getLogger(ResourcePackNoUpload.class.getName());
 
     private @Nullable ResourcePackNoUpload serverMod = null;
 
@@ -25,12 +28,21 @@ public class InitializeHook implements ModInitializer {
 
         ServerLifecycleEvents.SERVER_STARTING.register((server) -> {
             if (serverMod != null) throw new IllegalStateException();
-            serverMod = new ResourcePackNoUpload(server);
-            serverMod.onEnable();
+            try {
+                serverMod = new ResourcePackNoUpload(server, logger);
+                serverMod.onEnable();
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, e, () -> "Failed to enable ResourcePackNoUpload");
+                Throwable cause = e.getCause();
+                if (cause != null) {
+                    logger.log(Level.SEVERE, cause, () -> "Descend logs due the enabling fail:");
+                }
+            }
         });
 
         ServerLifecycleEvents.SERVER_STOPPED.register((server) -> {
-            Objects.requireNonNull(serverMod).onDisable();
+            if (serverMod == null) return;
+            serverMod.onDisable();
             serverMod = null;
         });
 
@@ -41,17 +53,22 @@ public class InitializeHook implements ModInitializer {
         });
 
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
+            if (serverMod == null) return;
             ServerPlayer player = handler.player;
-            Objects.requireNonNull(serverMod).listener().onPlayerJoin(player);
+            serverMod.listener().onPlayerJoin(player);
         });
 
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
+            if (serverMod == null) return;
             ServerPlayer player = handler.player;
-            Objects.requireNonNull(serverMod).listener().onPlayerQuit(player);
+            serverMod.listener().onPlayerQuit(player);
         });
 
         RNUPackLoadedCallback.EVENT.register((resourcePackInfo) -> {
-            Objects.requireNonNull(serverMod).listener().onRNUPackLoaded(resourcePackInfo);
+            if (serverMod == null) return;
+            // In the first server mod loading, the event is called before the listener
+            if (serverMod.listener() == null) return;
+            serverMod.listener().onRNUPackLoaded(resourcePackInfo);
         });
     }
 

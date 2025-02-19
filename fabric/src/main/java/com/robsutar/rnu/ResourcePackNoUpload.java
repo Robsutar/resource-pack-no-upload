@@ -32,16 +32,17 @@ import java.util.stream.Stream;
 
 public class ResourcePackNoUpload {
     private final MinecraftServer server;
+    private final Logger logger;
     private final SimpleScheduler scheduler;
-    private final Logger logger = Logger.getLogger(ResourcePackNoUpload.class.getName());
 
     private TextureProviderBytes textureProviderBytes;
     private FabricListener listener;
     private RNUConfig config;
     private ResourcePackState resourcePackState = new ResourcePackState.FailedToLoad();
 
-    public ResourcePackNoUpload(MinecraftServer server) {
+    public ResourcePackNoUpload(MinecraftServer server, Logger logger) {
         this.server = server;
+        this.logger = logger;
         scheduler = new SimpleScheduler(server);
     }
 
