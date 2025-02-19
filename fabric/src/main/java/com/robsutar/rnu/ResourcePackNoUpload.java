@@ -1,5 +1,6 @@
 package com.robsutar.rnu;
 
+import com.robsutar.rnu.fabric.FabricListener;
 import com.robsutar.rnu.fabric.FabricUtil;
 import com.robsutar.rnu.fabric.RNUPackLoadedCallback;
 import com.robsutar.rnu.util.OC;
@@ -34,6 +35,7 @@ public class ResourcePackNoUpload {
     private final Logger logger = Logger.getLogger(ResourcePackNoUpload.class.getName());
 
     private TextureProviderBytes textureProviderBytes;
+    private FabricListener listener;
     private RNUConfig config;
     private ResourcePackState resourcePackState = new ResourcePackState.FailedToLoad();
 
@@ -52,6 +54,7 @@ public class ResourcePackNoUpload {
             throw new RuntimeException("Initial loading failed, and the initial configuration could not be loaded, disabling plugin.", e);
         }
 
+        listener = new FabricListener(this);
         CompletableFuture.runAsync(() -> {
             try {
                 textureProviderBytes.run(() -> server.execute(() -> {
@@ -232,6 +235,10 @@ public class ResourcePackNoUpload {
         return "resourcepacknoupload";
     }
 
+    public String getName() {
+        return "ResourcePackNoUpload";
+    }
+
     public File getDataFolder() {
         return FabricLoader.getInstance().getConfigDir().resolve(getId()).toFile();
     }
@@ -250,6 +257,10 @@ public class ResourcePackNoUpload {
 
     public TextureProviderBytes textureProviderBytes() {
         return textureProviderBytes;
+    }
+
+    public FabricListener listener() {
+        return listener;
     }
 
     public RNUConfig config() {
