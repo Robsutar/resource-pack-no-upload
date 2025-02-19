@@ -3,6 +3,7 @@ package com.robsutar.rnu;
 import com.robsutar.rnu.fabric.FabricListener;
 import com.robsutar.rnu.fabric.FabricUtil;
 import com.robsutar.rnu.fabric.RNUPackLoadedCallback;
+import com.robsutar.rnu.fabric.SimpleScheduler;
 import com.robsutar.rnu.util.OC;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.network.chat.Component;
@@ -25,13 +26,13 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
 public class ResourcePackNoUpload {
     private final MinecraftServer server;
+    private final SimpleScheduler scheduler;
     private final Logger logger = Logger.getLogger(ResourcePackNoUpload.class.getName());
 
     private TextureProviderBytes textureProviderBytes;
@@ -41,6 +42,7 @@ public class ResourcePackNoUpload {
 
     public ResourcePackNoUpload(MinecraftServer server) {
         this.server = server;
+        scheduler = new SimpleScheduler(server);
     }
 
     public void onEnable() {
@@ -55,9 +57,9 @@ public class ResourcePackNoUpload {
         }
 
         listener = new FabricListener(this);
-        CompletableFuture.runAsync(() -> {
+        scheduler.runAsync(() -> {
             try {
-                textureProviderBytes.run(() -> server.execute(() -> {
+                textureProviderBytes.run(() -> scheduler.runSync(() -> {
                     resourcePackState = loaded;
                     getLogger().info("Resource pack provider bind address: " + textureProviderBytes.address());
                     getLogger().info("Resource pack provider bind uri: " + textureProviderBytes.uri());
@@ -69,7 +71,7 @@ public class ResourcePackNoUpload {
     }
 
     public void onDisable() {
-
+        scheduler.closeAndCancelPending();
     }
 
     private TextureProviderBytes loadTextureProviderBytes() {
@@ -249,6 +251,10 @@ public class ResourcePackNoUpload {
 
     public MinecraftServer getServer() {
         return server;
+    }
+
+    public SimpleScheduler getScheduler() {
+        return scheduler;
     }
 
     public Component text(String legacy) {
