@@ -13,6 +13,7 @@ dependencies {
     shadow libs.netty
     implementation "org.yaml:snakeyaml:2.3"
     shadow "org.yaml:snakeyaml:2.3"
+    shadow project(":core")
 
     minecraft "com.mojang:minecraft:1.16.5"
     mappings(loom.layered {
