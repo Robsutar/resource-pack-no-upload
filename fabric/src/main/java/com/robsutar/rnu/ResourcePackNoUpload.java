@@ -7,7 +7,6 @@ import com.robsutar.rnu.fabric.FabricUtil;
 import com.robsutar.rnu.fabric.RNUCommand;
 import com.robsutar.rnu.fabric.RNUPackLoadedCallback;
 import com.robsutar.rnu.util.OC;
-import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.commands.CommandSourceStack;
@@ -36,15 +35,19 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
-public class ResourcePackNoUpload implements ModInitializer {
+public class ResourcePackNoUpload {
+    private final MinecraftServer server;
     private final Logger logger = Logger.getLogger(ResourcePackNoUpload.class.getName());
 
     private TextureProviderBytes textureProviderBytes;
     private RNUConfig config;
     private ResourcePackState resourcePackState = new ResourcePackState.FailedToLoad();
 
-    @Override
-    public void onInitialize() {
+    public ResourcePackNoUpload(MinecraftServer server) {
+        this.server = server;
+    }
+
+    public void onEnable() {
         textureProviderBytes = loadTextureProviderBytes();
 
         ResourcePackState.Loaded loaded;
@@ -64,7 +67,6 @@ public class ResourcePackNoUpload implements ModInitializer {
 
         CompletableFuture.runAsync(() -> {
             try {
-                MinecraftServer server; // TODO:
                 textureProviderBytes.run(() -> server.execute(() -> {
                     resourcePackState = loaded;
                     getLogger().info("Resource pack provider bind address: " + textureProviderBytes.address());
@@ -76,13 +78,16 @@ public class ResourcePackNoUpload implements ModInitializer {
         });
     }
 
+    public void onDisable() {
+        
+    }
+
     private TextureProviderBytes loadTextureProviderBytes() {
         Map<String, Object> raw = FabricUtil.loadOrCreateConfig(this, "server.yml");
 
         String addressStr;
         if (raw.get("serverAddress") != null) addressStr = OC.str(raw.get("serverAddress"));
         else {
-            MinecraftServer server; // TODO:
             @Nullable String localIp = server.getLocalIp();
             if (localIp != null && !localIp.isEmpty())
                 addressStr = localIp;
@@ -246,6 +251,10 @@ public class ResourcePackNoUpload implements ModInitializer {
 
     public Logger getLogger() {
         return logger;
+    }
+
+    public MinecraftServer getServer() {
+        return server;
     }
 
     public Component text(String legacy) {

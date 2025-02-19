@@ -12,7 +12,7 @@
   "environment": "*",
   "entrypoints": {
     "main": [
-      "${PACKAGE}.${NAME}"
+      "${PACKAGE}.InitializeHook"
     ]
   },
   "depends": {
