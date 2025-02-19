@@ -8,6 +8,13 @@ base {
     archivesName = project.archives_base_name
 }
 
+repositories {
+    maven {
+        name = 'ParchmentMC'
+        url = 'https://maven.parchmentmc.org'
+    }
+}
+
 dependencies {
     implementation project(":core")
     shadow libs.netty
