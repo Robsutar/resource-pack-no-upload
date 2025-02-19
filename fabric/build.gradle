@@ -1,0 +1,83 @@
+plugins {
+    id 'fabric-loom' version '1.9-SNAPSHOT'
+    id 'maven-publish'
+    alias(libs.plugins.shadow)
+}
+
+base {
+    archivesName = project.archives_base_name
+}
+
+repositories {
+    maven {
+        name = 'ParchmentMC'
+        url = 'https://maven.parchmentmc.org'
+    }
+}
+
+dependencies {
+    implementation project(":core")
+    shadow libs.netty
+    implementation "org.yaml:snakeyaml:2.3"
+    shadow "org.yaml:snakeyaml:2.3"
+    shadow project(":core")
+
+    minecraft "com.mojang:minecraft:1.16.5"
+    mappings(loom.layered {
+        officialMojangMappings()
+        parchment("org.parchmentmc.data:parchment-1.16.5:2022.03.06@zip")
+    })
+    modImplementation "net.fabricmc:fabric-loader:0.16.10"
+
+    // Fabric API. This is technically optional, but you probably want it anyway.
+    modImplementation "net.fabricmc.fabric-api:fabric-api:0.42.0+1.16"
+}
+
+shadowJar {
+    configurations = [project.configurations.shadow]
+
+    def shadowPath = project.group.toString() + '.shadow.'
+
+    relocate 'io.netty', shadowPath + "io.netty"
+    relocate 'org.yaml.snakeyaml', shadowPath + "org.yaml.snakeyaml"
+}
+
+remapJar {
+    dependsOn shadowJar
+    mustRunAfter shadowJar
+    inputFile = shadowJar.archiveFile.get().asFile
+}
+
+processResources {
+    archivesBaseName = project.archives_base_name
+
+    def props = [ID: archivesBaseName, NAME: rootProject.name, VERSION: version, PACKAGE: project.group.toString()]
+    inputs.properties props
+    filteringCharset 'UTF-8'
+    filesMatching('fabric.mod.json') {
+        expand props
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    it.options.release = 8
+}
+
+java {
+    withSourcesJar()
+
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+// configure the maven publication
+publishing {
+    archivesBaseName = project.archives_base_name
+
+    publications {
+        create("mavenJava", MavenPublication) {
+            artifactId = archivesBaseName
+            from components.java
+        }
+    }
+}

@@ -3,6 +3,10 @@ plugins {
     alias(libs.plugins.shadow)
 }
 
+base {
+    archivesName = project.archives_base_name
+}
+
 sourceCompatibility = 8
 targetCompatibility = 17
 

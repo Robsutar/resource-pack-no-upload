@@ -168,6 +168,6 @@ jobs:
         with:
           tag_name: v${{ steps.next_version.outputs.NEXT_VERSION }}
           body: ${{ steps.get-tag-message.outputs.body }}
-          files: "**/build/libs/*.jar"
+          files: "**/build/libs/publish/*.jar"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

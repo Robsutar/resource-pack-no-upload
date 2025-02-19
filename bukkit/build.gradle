@@ -2,6 +2,10 @@ plugins {
     alias(libs.plugins.shadow)
 }
 
+base {
+    archivesName = project.archives_base_name
+}
+
 repositories {
     maven {
         name 'papermc'

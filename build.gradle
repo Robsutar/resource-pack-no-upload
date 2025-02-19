@@ -11,8 +11,20 @@ subprojects {
         options.encoding = 'UTF-8'
     }
 
-    tasks.withType(Jar).configureEach {
-        archiveFileName.set("${rootProject.name}-${project.name}-${version}.jar")
+    tasks.register('copyPublish', Copy) {
+        dependsOn jar
+        from(layout.buildDirectory.dir("libs").get()) {
+            include "*.jar"
+            exclude "*-all.jar"
+            exclude "*-sources.jar"
+        }
+        into(layout.buildDirectory.dir("libs").get().toString() + "/publish")
+        rename { fileName ->
+            "${rootProject.name}-${project.name}-${version}.jar"
+        }
+    }
+    tasks.named('build') {
+        finalizedBy 'copyPublish'
     }
 
     repositories {

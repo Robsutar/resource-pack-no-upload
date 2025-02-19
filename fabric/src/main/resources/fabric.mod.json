@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "id": "${ID}",
+  "version": "${VERSION}",
+  "name": "${NAME}",
+  "description": "Send your resource pack, without uploading it",
+  "authors": [
+    "Robsutar"
+  ],
+  "license": "MIT",
+  "icon": "assets/resourcepacknoupload/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "${PACKAGE}.InitializeHook"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.16.10",
+    "minecraft": "~1.16.5",
+    "java": ">=8",
+    "fabric": "*"
+  },
+  "suggests": {
+    "another-mod": "*"
+  },
+  "mixins": [
+    "resourcepacknoupload-fabric.mixins.json"
+  ]
+}

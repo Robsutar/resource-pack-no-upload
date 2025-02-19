@@ -1,16 +1,23 @@
 package com.robsutar.rnu;
 
-import com.robsutar.rnu.bukkit.BukkitListener;
-import com.robsutar.rnu.bukkit.BukkitUtil;
-import com.robsutar.rnu.bukkit.RNUCommand;
-import com.robsutar.rnu.bukkit.RNUPackLoadedEvent;
+import com.robsutar.rnu.fabric.FabricListener;
+import com.robsutar.rnu.fabric.FabricUtil;
+import com.robsutar.rnu.fabric.RNUPackLoadedCallback;
+import com.robsutar.rnu.fabric.SimpleScheduler;
 import com.robsutar.rnu.util.OC;
-import org.bukkit.Bukkit;
-import org.bukkit.plugin.java.JavaPlugin;
+import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.MinecraftServer;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.InetAddress;
+import java.net.URL;
+import java.net.URLConnection;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -18,16 +25,27 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Comparator;
 import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Stream;
 
-public final class ResourcePackNoUpload extends JavaPlugin {
+public class ResourcePackNoUpload {
+    private final MinecraftServer server;
+    private final Logger logger;
+    private final SimpleScheduler scheduler;
+
     private TextureProviderBytes textureProviderBytes;
+    private FabricListener listener;
     private RNUConfig config;
     private ResourcePackState resourcePackState = new ResourcePackState.FailedToLoad();
 
-    @Override
+    public ResourcePackNoUpload(MinecraftServer server, Logger logger) {
+        this.server = server;
+        this.logger = logger;
+        scheduler = new SimpleScheduler(server);
+    }
+
     public void onEnable() {
         textureProviderBytes = loadTextureProviderBytes();
 
@@ -39,12 +57,10 @@ public final class ResourcePackNoUpload extends JavaPlugin {
             throw new RuntimeException("Initial loading failed, and the initial configuration could not be loaded, disabling plugin.", e);
         }
 
-        Bukkit.getPluginManager().registerEvents(new BukkitListener(this), this);
-        Objects.requireNonNull(getCommand("resourcepacknoupload")).setExecutor(new RNUCommand(this));
-
-        Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
+        listener = new FabricListener(this);
+        scheduler.runAsync(() -> {
             try {
-                textureProviderBytes.run(() -> Bukkit.getScheduler().runTask(this, () -> {
+                textureProviderBytes.run(() -> scheduler.runSync(() -> {
                     resourcePackState = loaded;
                     getLogger().info("Resource pack provider bind address: " + textureProviderBytes.address());
                     getLogger().info("Resource pack provider bind uri: " + textureProviderBytes.uri());
@@ -55,19 +71,20 @@ public final class ResourcePackNoUpload extends JavaPlugin {
         });
     }
 
-    @Override
     public void onDisable() {
         textureProviderBytes.close();
+        scheduler.closeAndCancelPending();
     }
 
     private TextureProviderBytes loadTextureProviderBytes() {
-        Map<String, Object> raw = BukkitUtil.loadOrCreateConfig(this, "server.yml");
+        Map<String, Object> raw = FabricUtil.loadOrCreateConfig(this, "server.yml");
 
         String addressStr;
         if (raw.get("serverAddress") != null) addressStr = OC.str(raw.get("serverAddress"));
         else {
-            String definedIp = Bukkit.getIp();
-            if (!definedIp.isEmpty()) addressStr = definedIp;
+            @Nullable String localIp = server.getLocalIp();
+            if (localIp != null && !localIp.isEmpty())
+                addressStr = localIp;
             else try {
                 addressStr = InetAddress.getLocalHost().getHostAddress();
             } catch (UnknownHostException e) {
@@ -118,7 +135,7 @@ public final class ResourcePackNoUpload extends JavaPlugin {
             Map<String, Object> configRaw;
 
             try {
-                configRaw = BukkitUtil.loadOrCreateConfig(this, "config.yml");
+                configRaw = FabricUtil.loadOrCreateConfig(this, "config.yml");
             } catch (IllegalStateException e) {
                 throw new ResourcePackLoadException("Failed to load configuration file.", e);
             }
@@ -152,7 +169,7 @@ public final class ResourcePackNoUpload extends JavaPlugin {
             ResourcePackState.Loaded newState = new ResourcePackState.Loaded(resourcePackInfo, bytes);
             resourcePackState = newState;
 
-            Bukkit.getPluginManager().callEvent(new RNUPackLoadedEvent(resourcePackInfo));
+            RNUPackLoadedCallback.EVENT.invoker().view(resourcePackInfo);
 
             return newState;
         } catch (ResourcePackLoadException e) {
@@ -164,8 +181,94 @@ public final class ResourcePackNoUpload extends JavaPlugin {
         }
     }
 
+    public void saveResource(@NotNull String resourcePath, boolean replace) {
+        if (resourcePath.isEmpty()) {
+            throw new IllegalArgumentException("ResourcePath cannot be null or empty");
+        }
+
+        File dataFolder = getDataFolder();
+
+        resourcePath = resourcePath.replace('\\', '/');
+        InputStream in = getResource(resourcePath);
+        if (in == null) {
+            throw new IllegalArgumentException("The embedded resource '" + resourcePath + "' cannot be found in " + getId());
+        }
+
+        File outFile = new File(dataFolder, resourcePath);
+        int lastIndex = resourcePath.lastIndexOf('/');
+        File outDir = new File(dataFolder, resourcePath.substring(0, Math.max(lastIndex, 0)));
+
+        if (!outDir.exists() && !outDir.mkdirs()) throw new IllegalStateException();
+
+        try {
+            if (!outFile.exists() || replace) {
+                OutputStream out = Files.newOutputStream(outFile.toPath());
+                byte[] buf = new byte[1024];
+                int len;
+                while ((len = in.read(buf)) > 0) {
+                    out.write(buf, 0, len);
+                }
+                out.close();
+                in.close();
+            } else {
+                logger.log(Level.WARNING, "Could not save " + outFile.getName() + " to " + outFile + " because " + outFile.getName() + " already exists.");
+            }
+        } catch (IOException ex) {
+            logger.log(Level.SEVERE, "Could not save " + outFile.getName() + " to " + outFile, ex);
+        }
+    }
+
+    @Nullable
+    public InputStream getResource(@NotNull String filename) {
+        try {
+            URL url = getClass().getClassLoader().getResource(filename);
+
+            if (url == null) {
+                return null;
+            }
+
+            URLConnection connection = url.openConnection();
+            connection.setUseCaches(false);
+            return connection.getInputStream();
+        } catch (IOException ex) {
+            return null;
+        }
+    }
+
+    public String getId() {
+        return "resourcepacknoupload";
+    }
+
+    public String getName() {
+        return "ResourcePackNoUpload";
+    }
+
+    public File getDataFolder() {
+        return FabricLoader.getInstance().getConfigDir().resolve(getId()).toFile();
+    }
+
+    public Logger getLogger() {
+        return logger;
+    }
+
+    public MinecraftServer getServer() {
+        return server;
+    }
+
+    public SimpleScheduler getScheduler() {
+        return scheduler;
+    }
+
+    public Component text(String legacy) {
+        return Component.nullToEmpty(legacy);
+    }
+
     public TextureProviderBytes textureProviderBytes() {
         return textureProviderBytes;
+    }
+
+    public FabricListener listener() {
+        return listener;
     }
 
     public RNUConfig config() {
