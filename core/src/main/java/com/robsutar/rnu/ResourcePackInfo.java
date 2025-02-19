@@ -15,11 +15,12 @@ public final class ResourcePackInfo {
         this.hash = hash;
         this.prompt = prompt;
 
-        StringBuilder sha1Hash = new StringBuilder();
-        for (byte hashedByte : hash) {
-            sha1Hash.append(Integer.toString((hashedByte & 0xff) + 0x100, 16).substring(1));
+        StringBuilder hexString = new StringBuilder();
+        for (byte b : hash) {
+            hexString.append(String.format("%02x", b));
         }
-        hashStr = sha1Hash.toString();
+
+        hashStr = hexString.toString();
     }
 
     public UUID id() {
