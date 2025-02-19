@@ -259,7 +259,7 @@ public class ResourcePackNoUpload {
     }
 
     public Component text(String legacy) {
-        return Component.nullToEmpty(legacy); // TODO: this does not work
+        return Component.nullToEmpty(legacy);
     }
 
     public TextureProviderBytes textureProviderBytes() {
