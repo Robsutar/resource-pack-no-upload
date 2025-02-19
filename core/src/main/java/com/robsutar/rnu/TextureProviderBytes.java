@@ -44,41 +44,7 @@ public abstract class TextureProviderBytes {
                             ChannelPipeline p = ch.pipeline();
                             p.addLast(new HttpServerCodec());
                             p.addLast(new HttpObjectAggregator(65536));
-                            p.addLast(new SimpleChannelInboundHandler<FullHttpRequest>() {
-
-                                @Override
-                                protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest request) {
-                                    ResourcePackState state = state();
-                                    if (state instanceof ResourcePackState.Loaded) {
-                                        ResourcePackState.Loaded loaded = (ResourcePackState.Loaded) state;
-                                        byte[] bytes = loaded.bytes();
-
-                                        FullHttpResponse response = new DefaultFullHttpResponse(
-                                                HttpVersion.HTTP_1_1,
-                                                HttpResponseStatus.OK,
-                                                Unpooled.wrappedBuffer(bytes)
-                                        );
-
-                                        response.headers()
-                                                .set(HttpHeaderNames.CONTENT_TYPE, "application/zip")
-                                                .set(HttpHeaderNames.CONTENT_DISPOSITION, "attachment; filename=\"pack.zip\"")
-                                                .set(HttpHeaderNames.CONTENT_LENGTH, bytes.length);
-
-                                        ctx.writeAndFlush(response)
-                                                .addListener(ChannelFutureListener.CLOSE);
-                                    } else {
-                                        DefaultFullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NOT_FOUND);
-                                        ctx.writeAndFlush(response)
-                                                .addListener(ChannelFutureListener.CLOSE);
-                                    }
-                                }
-
-                                @Override
-                                public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-                                    // Close without logging
-                                    ctx.close();
-                                }
-                            });
+                            p.addLast(new LastChildHandler());
                         }
                     })
                     .bind(address)
@@ -94,6 +60,41 @@ public abstract class TextureProviderBytes {
         } finally {
             bossGroup.shutdownGracefully();
             workerGroup.shutdownGracefully();
+        }
+    }
+
+    private class LastChildHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
+        @Override
+        protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest request) {
+            ResourcePackState state = state();
+            if (state instanceof ResourcePackState.Loaded) {
+                ResourcePackState.Loaded loaded = (ResourcePackState.Loaded) state;
+                byte[] bytes = loaded.bytes();
+
+                FullHttpResponse response = new DefaultFullHttpResponse(
+                        HttpVersion.HTTP_1_1,
+                        HttpResponseStatus.OK,
+                        Unpooled.wrappedBuffer(bytes)
+                );
+
+                response.headers()
+                        .set(HttpHeaderNames.CONTENT_TYPE, "application/zip")
+                        .set(HttpHeaderNames.CONTENT_DISPOSITION, "attachment; filename=\"pack.zip\"")
+                        .set(HttpHeaderNames.CONTENT_LENGTH, bytes.length);
+
+                ctx.writeAndFlush(response)
+                        .addListener(ChannelFutureListener.CLOSE);
+            } else {
+                DefaultFullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NOT_FOUND);
+                ctx.writeAndFlush(response)
+                        .addListener(ChannelFutureListener.CLOSE);
+            }
+        }
+
+        @Override
+        public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+            // Close without logging
+            ctx.close();
         }
     }
 }
