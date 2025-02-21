@@ -22,15 +22,15 @@ dependencies {
     shadow "org.yaml:snakeyaml:2.3"
     shadow project(":core")
 
-    minecraft "com.mojang:minecraft:1.16.5"
+    minecraft "com.mojang:minecraft:1.18.2"
     mappings(loom.layered {
         officialMojangMappings()
-        parchment("org.parchmentmc.data:parchment-1.16.5:2022.03.06@zip")
+        parchment("org.parchmentmc.data:parchment-1.18.2:2022.11.06@zip")
     })
     modImplementation "net.fabricmc:fabric-loader:0.16.10"
 
     // Fabric API. This is technically optional, but you probably want it anyway.
-    modImplementation "net.fabricmc.fabric-api:fabric-api:0.42.0+1.16"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:0.67.0+1.18.2"
 }
 
 shadowJar {
