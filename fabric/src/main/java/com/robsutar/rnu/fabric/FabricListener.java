@@ -37,10 +37,11 @@ public class FabricListener {
 
     private void addPending(ServerPlayer player, ResourcePackInfo resourcePackInfo) {
         pending.put(player, System.currentTimeMillis());
-        //player.clearResourcePacks();
         player.connection.send(new ClientboundResourcePackPacket(
                 resourcePackInfo.uri(),
-                resourcePackInfo.hashStr()
+                resourcePackInfo.hashStr(),
+                false,
+                serverMod.text(resourcePackInfo.prompt())
         ));
     }
 
