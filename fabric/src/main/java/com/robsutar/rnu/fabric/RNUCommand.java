@@ -20,7 +20,8 @@ public class RNUCommand extends LiteralArgumentBuilder<CommandSourceStack> {
             CommandSourceStack source = context.getSource();
             try {
                 serverMod.load();
-                source.sendSuccess(serverMod.text("§aResource pack reloaded successfully!"), false);
+                // Is not an actual `failure`, but this method is the same for 1.19.x-1.20.1
+                source.sendFailure(serverMod.text("§aResource pack reloaded successfully!"));
             } catch (ResourcePackLoadException e) {
                 if (serverMod.resourcePackState() instanceof ResourcePackState.Loading) {
                     source.sendFailure(serverMod.text("§c§lERROR!§r §eResource pack is already being loaded!"));
