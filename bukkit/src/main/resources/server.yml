@@ -4,6 +4,15 @@
 # This field has no default value, manual set is required.
 port:
 
-# Provides the address start for address for the resource pack.
-# If this is field is blank, it will use defined ip in server configuration, or the program ipv4.
-serverAddress:
+# Provide the root address that will be sent to players, usually
+# `http://` + server's public IP + `:` + port defined above.
+# Example:
+# publicLinkRoot: "http://192.0.2.1:25008"
+
+# This field is basically MANDATORY for applications running on
+# docker (any pterodactyl-based server), usually you can use the
+# server's IP, but with the port mentioned above.
+
+# If this is field is blank, it will use defined ip in server
+# configuration, or the program ipv4.
+publicLinkRoot:
