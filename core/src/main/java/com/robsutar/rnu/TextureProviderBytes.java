@@ -78,7 +78,7 @@ public class TextureProviderBytes {
     private class LastChildHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
         @Override
         protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest request) {
-            ResourcePackState state = stateProvider.state();
+            ResourcePackState state = stateProvider.resourcePackState();
             if (state instanceof ResourcePackState.Loaded) {
                 ResourcePackState.Loaded loaded = (ResourcePackState.Loaded) state;
                 if (loaded.resourcePackInfo().uri().endsWith(request.uri())) {
@@ -117,7 +117,7 @@ public class TextureProviderBytes {
         if (raw.get("port") == null)
             throw new IllegalArgumentException(
                     "Port undefined in configuration!\n" +
-                            "Define it in plugins/ResourcePackNoUpload/server.yml\n" +
+                            "Define it in ResourcePackNoUpload server.yml config\n" +
                             "Make sure to open this port to the players.\n"
             );
         int port = OC.intValue(raw.get("port"));
@@ -138,6 +138,6 @@ public class TextureProviderBytes {
     }
 
     public interface StateProvider {
-        ResourcePackState state();
+        ResourcePackState resourcePackState();
     }
 }

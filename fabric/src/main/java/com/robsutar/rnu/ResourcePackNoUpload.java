@@ -4,7 +4,6 @@ import com.robsutar.rnu.fabric.FabricListener;
 import com.robsutar.rnu.fabric.FabricUtil;
 import com.robsutar.rnu.fabric.RNUPackLoadedCallback;
 import com.robsutar.rnu.fabric.SimpleScheduler;
-import com.robsutar.rnu.util.OC;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
@@ -15,10 +14,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.InetAddress;
 import java.net.URL;
 import java.net.URLConnection;
-import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
@@ -30,7 +27,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
-public class ResourcePackNoUpload {
+public class ResourcePackNoUpload implements TextureProviderBytes.StateProvider {
     private final MinecraftServer server;
     private final Logger logger;
     private final SimpleScheduler scheduler;
@@ -47,7 +44,11 @@ public class ResourcePackNoUpload {
     }
 
     public void onEnable() {
-        textureProviderBytes = loadTextureProviderBytes();
+        textureProviderBytes = TextureProviderBytes.deserialize(
+                this,
+                server.getLocalIp(),
+                FabricUtil.loadOrCreateConfig(this, "server.yml")
+        );
 
         ResourcePackState.Loaded loaded;
         try {
@@ -74,38 +75,6 @@ public class ResourcePackNoUpload {
     public void onDisable() {
         textureProviderBytes.close();
         scheduler.closeAndCancelPending();
-    }
-
-    private TextureProviderBytes loadTextureProviderBytes() {
-        Map<String, Object> raw = FabricUtil.loadOrCreateConfig(this, "server.yml");
-
-        String addressStr;
-        if (raw.get("serverAddress") != null) addressStr = OC.str(raw.get("serverAddress"));
-        else {
-            @Nullable String localIp = server.getLocalIp();
-            if (localIp != null && !localIp.isEmpty())
-                addressStr = localIp;
-            else try {
-                addressStr = InetAddress.getLocalHost().getHostAddress();
-            } catch (UnknownHostException e) {
-                throw new IllegalArgumentException("Failed to get server address from program ipv4.");
-            }
-        }
-
-        if (raw.get("port") == null)
-            throw new IllegalArgumentException(
-                    "Port undefined in configuration!\n" +
-                            "Define it in plugins/ResourcePackNoUpload/server.yml\n" +
-                            "Make sure to open this port to the players.\n"
-            );
-        int port = OC.intValue(raw.get("port"));
-
-        return new TextureProviderBytes(addressStr, port) {
-            @Override
-            public ResourcePackState state() {
-                return resourcePackState;
-            }
-        };
     }
 
     public ResourcePackState.Loaded load() throws ResourcePackLoadException {
@@ -275,6 +244,7 @@ public class ResourcePackNoUpload {
         return config;
     }
 
+    @Override
     public ResourcePackState resourcePackState() {
         return resourcePackState;
     }
