@@ -20,9 +20,14 @@ The server config
 # This server port needs to be open to the players
 port: 3521 # Chose an open server port for the players.
 
-# Provides the address start for address for the resource pack.
-# If this is field is blank, it will use defined ip in server.properties, or the program ipv4.
-serverAddress: # For the most common cases, this field does not need to be set.
+# Provide the root address that will be sent to players, usually
+# `http://` + server's public IP + `:` + port defined above.
+# Example:
+# publicLinkRoot: "http://192.0.2.1:25008"
+# 
+# For the most common cases, this field does not need to be set, but for Pterodactyl-based
+# servers this field is mandatory.
+publicLinkRoot:
 ```
 
 ### Creating resource pack loader
