@@ -1,5 +1,6 @@
 package com.robsutar.rnu;
 
+import com.robsutar.rnu.util.OC;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
@@ -7,18 +8,24 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.http.*;
+import org.jetbrains.annotations.Nullable;
 
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.URI;
+import java.net.UnknownHostException;
+import java.util.Map;
 
-public abstract class TextureProviderBytes {
+public class TextureProviderBytes {
+    private final StateProvider stateProvider;
     private final InetSocketAddress address;
     private final URI uri;
     private Channel channel;
 
-    public TextureProviderBytes(String addressStr, int port) {
-        address = new InetSocketAddress(addressStr, port);
-        uri = URI.create("http://" + addressStr + ":" + port);
+    public TextureProviderBytes(StateProvider stateProvider, String publicLinkRoot, int port) {
+        this.stateProvider = stateProvider;
+        address = new InetSocketAddress(port);
+        uri = URI.create(publicLinkRoot);
     }
 
     public InetSocketAddress address() {
@@ -28,8 +35,6 @@ public abstract class TextureProviderBytes {
     public URI uri() {
         return uri;
     }
-
-    public abstract ResourcePackState state();
 
     public void run(Runnable beforeLock) throws Exception {
         EventLoopGroup bossGroup = new NioEventLoopGroup(1);
@@ -73,7 +78,7 @@ public abstract class TextureProviderBytes {
     private class LastChildHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
         @Override
         protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest request) {
-            ResourcePackState state = state();
+            ResourcePackState state = stateProvider.state();
             if (state instanceof ResourcePackState.Loaded) {
                 ResourcePackState.Loaded loaded = (ResourcePackState.Loaded) state;
                 if (loaded.resourcePackInfo().uri().endsWith(request.uri())) {
@@ -106,5 +111,33 @@ public abstract class TextureProviderBytes {
             // Close without logging
             ctx.close();
         }
+    }
+
+    public static TextureProviderBytes deserialize(StateProvider stateProvider, @Nullable String serverIp, Map<String, Object> raw) {
+        if (raw.get("port") == null)
+            throw new IllegalArgumentException(
+                    "Port undefined in configuration!\n" +
+                            "Define it in plugins/ResourcePackNoUpload/server.yml\n" +
+                            "Make sure to open this port to the players.\n"
+            );
+        int port = OC.intValue(raw.get("port"));
+
+        String publicLinkRoot;
+        if (raw.get("publicLinkRoot") != null) publicLinkRoot = OC.str(raw.get("publicLinkRoot"));
+        else {
+            if (serverIp != null && !serverIp.isEmpty()) publicLinkRoot = serverIp;
+            else try {
+                publicLinkRoot = InetAddress.getLocalHost().getHostAddress();
+            } catch (UnknownHostException e) {
+                throw new IllegalArgumentException("Failed to get server address from program ipv4.");
+            }
+            publicLinkRoot = "http://" + publicLinkRoot + ":" + port;
+        }
+
+        return new TextureProviderBytes(stateProvider, publicLinkRoot, port);
+    }
+
+    public interface StateProvider {
+        ResourcePackState state();
     }
 }
