@@ -2,6 +2,8 @@
 
 # This port needs to be open to the players
 # This field has no default value, manual set is required.
+# Example:
+# port: 25008
 port:
 
 # Provide the root address that will be sent to players, usually
