@@ -1,7 +1,6 @@
 package com.robsutar.rnu;
 
 import com.google.inject.Inject;
-import com.robsutar.rnu.util.OC;
 import com.robsutar.rnu.velocity.RNUCommand;
 import com.robsutar.rnu.velocity.RNUPackLoadedEvent;
 import com.robsutar.rnu.velocity.VelocityListener;
@@ -24,7 +23,6 @@ import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.URLConnection;
-import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
@@ -41,7 +39,7 @@ import java.util.stream.Stream;
         version = "@version@",
         description = "Send your resource pack, without uploading it",
         authors = {"Robsutar"})
-public final class ResourcePackNoUpload {
+public final class ResourcePackNoUpload implements TextureProviderBytes.StateProvider {
     private final ProxyServer server;
     private final Logger logger;
 
@@ -57,7 +55,13 @@ public final class ResourcePackNoUpload {
 
     @Subscribe
     public void onProxyInitialization(ProxyInitializeEvent event) {
-        textureProviderBytes = loadTextureProviderBytes();
+        InetAddress hostAddress = getServer().getBoundAddress().getAddress();
+        @Nullable String serverIp = (!hostAddress.isAnyLocalAddress()) ? hostAddress.getHostAddress() : null;
+        textureProviderBytes = TextureProviderBytes.deserialize(
+                this,
+                serverIp,
+                VelocityUtil.loadOrCreateConfig(this, "server.yml")
+        );
 
         ResourcePackState.Loaded loaded;
         try {
@@ -92,38 +96,6 @@ public final class ResourcePackNoUpload {
     @Subscribe
     public void onDisable(ProxyShutdownEvent event) {
         textureProviderBytes.close();
-    }
-
-    private TextureProviderBytes loadTextureProviderBytes() {
-        Map<String, Object> raw = VelocityUtil.loadOrCreateConfig(this, "server.yml");
-
-        String addressStr;
-        if (raw.get("serverAddress") != null) addressStr = OC.str(raw.get("serverAddress"));
-        else {
-            InetAddress hostAddress = getServer().getBoundAddress().getAddress();
-            if (!hostAddress.isAnyLocalAddress())
-                addressStr = hostAddress.getHostAddress();
-            else try {
-                addressStr = InetAddress.getLocalHost().getHostAddress();
-            } catch (UnknownHostException e) {
-                throw new IllegalArgumentException("Failed to get server address from program ipv4.");
-            }
-        }
-
-        if (raw.get("port") == null)
-            throw new IllegalArgumentException(
-                    "Port undefined in configuration!\n" +
-                            "Define it in plugins/ResourcePackNoUpload/server.yml\n" +
-                            "Make sure to open this port to the players.\n"
-            );
-        int port = OC.intValue(raw.get("port"));
-
-        return new TextureProviderBytes(addressStr, port) {
-            @Override
-            public ResourcePackState state() {
-                return resourcePackState;
-            }
-        };
     }
 
     public ResourcePackState.Loaded load() throws ResourcePackLoadException {
@@ -281,6 +253,7 @@ public final class ResourcePackNoUpload {
         return config;
     }
 
+    @Override
     public ResourcePackState resourcePackState() {
         return resourcePackState;
     }

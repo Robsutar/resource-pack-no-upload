@@ -4,14 +4,11 @@ import com.robsutar.rnu.bukkit.BukkitListener;
 import com.robsutar.rnu.bukkit.BukkitUtil;
 import com.robsutar.rnu.bukkit.RNUCommand;
 import com.robsutar.rnu.bukkit.RNUPackLoadedEvent;
-import com.robsutar.rnu.util.OC;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
@@ -22,14 +19,18 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Stream;
 
-public final class ResourcePackNoUpload extends JavaPlugin {
+public final class ResourcePackNoUpload extends JavaPlugin implements TextureProviderBytes.StateProvider {
     private TextureProviderBytes textureProviderBytes;
     private RNUConfig config;
     private ResourcePackState resourcePackState = new ResourcePackState.FailedToLoad();
 
     @Override
     public void onEnable() {
-        textureProviderBytes = loadTextureProviderBytes();
+        textureProviderBytes = TextureProviderBytes.deserialize(
+                this,
+                Bukkit.getIp(),
+                BukkitUtil.loadOrCreateConfig(this, "server.yml")
+        );
 
         ResourcePackState.Loaded loaded;
         try {
@@ -58,37 +59,6 @@ public final class ResourcePackNoUpload extends JavaPlugin {
     @Override
     public void onDisable() {
         textureProviderBytes.close();
-    }
-
-    private TextureProviderBytes loadTextureProviderBytes() {
-        Map<String, Object> raw = BukkitUtil.loadOrCreateConfig(this, "server.yml");
-
-        String addressStr;
-        if (raw.get("serverAddress") != null) addressStr = OC.str(raw.get("serverAddress"));
-        else {
-            String definedIp = Bukkit.getIp();
-            if (!definedIp.isEmpty()) addressStr = definedIp;
-            else try {
-                addressStr = InetAddress.getLocalHost().getHostAddress();
-            } catch (UnknownHostException e) {
-                throw new IllegalArgumentException("Failed to get server address from program ipv4.");
-            }
-        }
-
-        if (raw.get("port") == null)
-            throw new IllegalArgumentException(
-                    "Port undefined in configuration!\n" +
-                            "Define it in plugins/ResourcePackNoUpload/server.yml\n" +
-                            "Make sure to open this port to the players.\n"
-            );
-        int port = OC.intValue(raw.get("port"));
-
-        return new TextureProviderBytes(addressStr, port) {
-            @Override
-            public ResourcePackState state() {
-                return resourcePackState;
-            }
-        };
     }
 
     public ResourcePackState.Loaded load() throws ResourcePackLoadException {
@@ -172,6 +142,7 @@ public final class ResourcePackNoUpload extends JavaPlugin {
         return config;
     }
 
+    @Override
     public ResourcePackState resourcePackState() {
         return resourcePackState;
     }
