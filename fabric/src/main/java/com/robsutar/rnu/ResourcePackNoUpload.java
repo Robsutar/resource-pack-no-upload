@@ -138,6 +138,7 @@ public class ResourcePackNoUpload implements TextureProviderBytes.StateProvider 
             ResourcePackState.Loaded newState = new ResourcePackState.Loaded(resourcePackInfo, bytes);
             resourcePackState = newState;
 
+            getLogger().info("Resource Pack loaded, link: " + resourcePackInfo.uri());
             RNUPackLoadedCallback.EVENT.invoker().view(resourcePackInfo);
 
             return newState;

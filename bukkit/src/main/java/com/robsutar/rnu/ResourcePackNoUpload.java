@@ -122,6 +122,7 @@ public final class ResourcePackNoUpload extends JavaPlugin implements TexturePro
             ResourcePackState.Loaded newState = new ResourcePackState.Loaded(resourcePackInfo, bytes);
             resourcePackState = newState;
 
+            getLogger().info("Resource Pack loaded, link: " + resourcePackInfo.uri());
             Bukkit.getPluginManager().callEvent(new RNUPackLoadedEvent(resourcePackInfo));
 
             return newState;
