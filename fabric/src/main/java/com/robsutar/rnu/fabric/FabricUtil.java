@@ -13,14 +13,14 @@ import java.util.Map;
 public class FabricUtil {
     private static final Yaml YAML = new Yaml();
 
-    public static <K, V> Map<K, V> loadOrCreateConfig(ResourcePackNoUpload mod, String fileName) throws IllegalStateException {
-        File folder = mod.getDataFolder();
+    public static <K, V> Map<K, V> loadOrCreateConfig(ResourcePackNoUpload rnu, String fileName) throws IllegalStateException {
+        File folder = rnu.getDataFolder();
         if (!folder.exists() && !folder.mkdir())
-            throw new IllegalStateException("Failed to create mod folder");
+            throw new IllegalStateException("Failed to create rnu folder");
 
         File configFile = new File(folder, fileName);
         if (!configFile.exists()) {
-            mod.saveResource(fileName, false);
+            rnu.saveResource(fileName, false);
         }
         try (InputStreamReader reader = new InputStreamReader(Files.newInputStream(configFile.toPath()), StandardCharsets.UTF_8)) {
             Map<K, V> mapToAdd = YAML.load(reader);

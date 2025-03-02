@@ -68,7 +68,7 @@ public class InitializeHook implements ModInitializer {
 
         RNUPackLoadedCallback.EVENT.register((resourcePackInfo) -> {
             if (rnu == null) return;
-            // In the first server mod loading, the event is called before the listener
+            // In the first rnu loading, the event is called before the listener
             if (rnu.listener() == null) return;
             rnu.listener().onRNUPackLoaded(resourcePackInfo);
         });
