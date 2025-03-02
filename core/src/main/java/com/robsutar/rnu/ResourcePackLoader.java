@@ -69,7 +69,7 @@ public interface ResourcePackLoader {
 
         @Override
         public Map<String, Consumer<ZipOutputStream>> appendFiles() throws Exception {
-            if (!folder.exists()) throw new Exception("Directory not found: " + folder);
+            if (!folder.exists() && !folder.mkdirs()) throw new Exception("Directory could not be created: " + folder);
             if (!folder.isDirectory()) throw new Exception("File is not directory: " + folder);
 
             HashMap<String, Consumer<ZipOutputStream>> output = new HashMap<>();
