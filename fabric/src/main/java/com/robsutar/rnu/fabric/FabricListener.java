@@ -12,19 +12,19 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class FabricListener {
-    private final ResourcePackNoUpload serverMod;
+    private final ResourcePackNoUpload rnu;
 
     private final HashMap<ServerPlayer, Long> pending = new HashMap<>();
 
-    public FabricListener(ResourcePackNoUpload serverMod) {
-        this.serverMod = serverMod;
+    public FabricListener(ResourcePackNoUpload rnu) {
+        this.rnu = rnu;
 
-        serverMod.getScheduler().repeat(this::checkPending, serverMod.config().resendingDelay(), serverMod.config().resendingDelay());
+        rnu.getScheduler().repeat(this::checkPending, rnu.config().resendingDelay(), rnu.config().resendingDelay());
     }
 
     private void checkPending() {
-        if (serverMod.resourcePackState() instanceof ResourcePackState.Loaded) {
-            ResourcePackState.Loaded loaded = (ResourcePackState.Loaded) serverMod.resourcePackState();
+        if (rnu.resourcePackState() instanceof ResourcePackState.Loaded) {
+            ResourcePackState.Loaded loaded = (ResourcePackState.Loaded) rnu.resourcePackState();
             long currentTime = System.currentTimeMillis();
 
             for (Map.Entry<ServerPlayer, Long> entry : pending.entrySet()) {
@@ -41,17 +41,17 @@ public class FabricListener {
                 resourcePackInfo.uri(),
                 resourcePackInfo.hashStr(),
                 false,
-                serverMod.text(resourcePackInfo.prompt())
+                rnu.text(resourcePackInfo.prompt())
         ));
     }
 
     public void onPlayerJoin(ServerPlayer player) {
-        serverMod.getScheduler().runLater(() -> {
-            if (!pending.containsKey(player) && serverMod.resourcePackState() instanceof ResourcePackState.Loaded) {
-                ResourcePackState.Loaded loaded = (ResourcePackState.Loaded) serverMod.resourcePackState();
+        rnu.getScheduler().runLater(() -> {
+            if (!pending.containsKey(player) && rnu.resourcePackState() instanceof ResourcePackState.Loaded) {
+                ResourcePackState.Loaded loaded = (ResourcePackState.Loaded) rnu.resourcePackState();
                 addPending(player, loaded.resourcePackInfo());
             }
-        }, serverMod.config().sendingDelay());
+        }, rnu.config().sendingDelay());
     }
 
     public void onPlayerQuit(ServerPlayer player) {
@@ -60,7 +60,7 @@ public class FabricListener {
 
     public void onPlayerResourcePackStatus(ServerPlayer player, ServerboundResourcePackPacket.Action action) {
         if (pending.remove(player) != null) {
-            RNUConfig config = serverMod.config();
+            RNUConfig config = rnu.config();
 
             switch (action.name()) {
                 // Intermediates called here.
@@ -69,7 +69,7 @@ public class FabricListener {
                     break;
                 case "DECLINED": {
                     if (config.kickOnRefuseMessage() != null) {
-                        player.connection.disconnect(serverMod.text(config.kickOnRefuseMessage()));
+                        player.connection.disconnect(rnu.text(config.kickOnRefuseMessage()));
                     }
                     break;
                 }
@@ -78,7 +78,7 @@ public class FabricListener {
                 case "FAILED_RELOAD":
                 case "DISCARDED": {
                     if (config.kickOnFailMessage() != null) {
-                        player.connection.disconnect(serverMod.text(config.kickOnFailMessage().replace("<error_code>", action.name())));
+                        player.connection.disconnect(rnu.text(config.kickOnFailMessage().replace("<error_code>", action.name())));
                     }
                     break;
                 }
@@ -87,14 +87,14 @@ public class FabricListener {
                     break;
                 default:
                     throw new IllegalStateException(
-                            "Invalid state. Is " + serverMod.getName() + " outdated?"
+                            "Invalid state. Is " + rnu.getName() + " outdated?"
                     );
             }
         }
     }
 
     public void onRNUPackLoaded(ResourcePackInfo resourcePackInfo) {
-        for (ServerPlayer player : serverMod.getServer().getPlayerList().getPlayers()) {
+        for (ServerPlayer player : rnu.getServer().getPlayerList().getPlayers()) {
             addPending(player, resourcePackInfo);
         }
     }
