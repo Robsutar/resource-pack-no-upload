@@ -2,19 +2,21 @@
 
 # ResourcePackNoUpload Plugin
 
-A Minecraft server plugin that allows server administrators to manage and distribute resource packs efficiently without
+A Minecraft server tool that allows server administrators to manage and distribute resource packs efficiently without
 requiring external hosting.
 
 ## Getting Started
 
-The plugin will generate the configuration templates if they do not
+The RNU will generate the configuration templates if they do not
 exist, but will not work without additional changes.
 Two things are important: defining the port for the resource pack provider, and the loader to load the resource pack.
 
 ### Defining port
 
-The server config
-`plugins/ResourcePackNoUpload/server.yml`
+The server config:
+
+- For RNU plugin: `plugins/ResourcePackNoUpload/server.yml`
+- For RNU mod: `config/resourcepacknoupload/server.yml`
 
 ```yml
 # This server port needs to be open to the players
@@ -32,10 +34,13 @@ publicLinkRoot:
 
 ### Creating resource pack loader
 
-The plugin config (reloadable) `plugins/ResourcePackNoUpload/config.yml`
+The plugin config (reloadable with `/rnu reload`):
+
+- For RNU plugin: `plugins/ResourcePackNoUpload/config.yml`
+- For RNU mod: `config/resourcepacknoupload/config.yml`
 
 ```yml
-# The texture pack loader, called every time that the resource pack is loaded by the plugin.
+# The texture pack loader, called every time that the resource pack is loaded by the RNU.
 loader:
   type: # Here is your loader type.
   # Additional loader fields, each type has their own fields.
@@ -54,7 +59,7 @@ loader:
   # Is inside `Cool Folder` (for this example) the resource pack files should be.
   # Cool Folder/pack.mcmeta
   # Cool Folder/assets/minecraft...
-  folder: "plugins/ResourcePackNoUpload/Cool Folder/"
+  folder: "rnu resource pack/Cool Folder/"
   ```
 
 </details>
@@ -62,7 +67,7 @@ loader:
 <details>
   <summary><strong>Download</strong> downloads from web, with http headers</summary>
   Downloads the resource pack from a link.
-  At first, it would be somewhat against the plugin's purpose, but this loader also
+  At first, it would be somewhat against the RNU purpose, but this loader also
   supports http headers for the download request, allowing you to download the
   resource,  pack with private keys, witch is not supported directly by the minecraft client.
 
@@ -132,7 +137,7 @@ loader:
   # This can be any loader, For this loader example we are using simple Manual loader.
   loader:
     type: Manual
-    folder: "plugins/ResourcePackNoUpload/Cool Folder/"
+    folder: "rnu resource pack/Cool Folder/"
   ```
 
 </details>
@@ -150,7 +155,7 @@ loader:
   # their files will replace the other files.
   loaders:
     - type: Manual
-      folder: "plugins/ResourcePackNoUpload/Cool Folder/"
+      folder: "rnu resource pack/Cool Folder/"
     - type: Manual
       folder: "plugins/ModelEngine/resource pack/"
   ```
@@ -159,5 +164,5 @@ loader:
 
 ## Additional Configurations
 
-There are other settings inside config.yml, such as messages and plugin behavior, refer to the automatically generated
+There are other settings inside config.yml, such as messages and RNU behavior, refer to the automatically generated
 config.yml.

@@ -37,7 +37,7 @@ public final class ResourcePackNoUpload extends JavaPlugin implements TexturePro
             loaded = load();
             resourcePackState = new ResourcePackState.LoadedPendingProvider(loaded);
         } catch (ResourcePackLoadException e) {
-            throw new RuntimeException("Initial loading failed, and the initial configuration could not be loaded, disabling plugin.", e);
+            throw new RuntimeException("Initial loading failed, and the initial configuration could not be loaded, disabling RNU.", e);
         }
 
         Bukkit.getPluginManager().registerEvents(new BukkitListener(this), this);

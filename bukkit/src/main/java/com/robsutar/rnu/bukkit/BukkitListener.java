@@ -21,21 +21,21 @@ import java.util.UUID;
 import java.util.function.BiConsumer;
 
 public class BukkitListener implements Listener {
-    private final ResourcePackNoUpload plugin;
+    private final ResourcePackNoUpload rnu;
     private final BiConsumer<Player, ResourcePackInfo> setResourcePackFunction;
 
     private final HashMap<Player, Long> pending = new HashMap<>();
 
-    public BukkitListener(ResourcePackNoUpload plugin) {
-        this.plugin = plugin;
+    public BukkitListener(ResourcePackNoUpload rnu) {
+        this.rnu = rnu;
         setResourcePackFunction = extractResourcePackFunction();
 
-        Bukkit.getScheduler().runTaskTimer(plugin, this::checkPending, plugin.config().resendingDelay(), plugin.config().resendingDelay());
+        Bukkit.getScheduler().runTaskTimer(rnu, this::checkPending, rnu.config().resendingDelay(), rnu.config().resendingDelay());
     }
 
     private void checkPending() {
-        if (plugin.resourcePackState() instanceof ResourcePackState.Loaded) {
-            ResourcePackState.Loaded loaded = (ResourcePackState.Loaded) plugin.resourcePackState();
+        if (rnu.resourcePackState() instanceof ResourcePackState.Loaded) {
+            ResourcePackState.Loaded loaded = (ResourcePackState.Loaded) rnu.resourcePackState();
             long currentTime = System.currentTimeMillis();
 
             for (Map.Entry<Player, Long> entry : pending.entrySet()) {
@@ -53,13 +53,13 @@ public class BukkitListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerJoin(PlayerJoinEvent event) {
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+        Bukkit.getScheduler().runTaskLater(rnu, () -> {
             Player player = event.getPlayer();
-            if (!pending.containsKey(player) && plugin.resourcePackState() instanceof ResourcePackState.Loaded) {
-                ResourcePackState.Loaded loaded = (ResourcePackState.Loaded) plugin.resourcePackState();
+            if (!pending.containsKey(player) && rnu.resourcePackState() instanceof ResourcePackState.Loaded) {
+                ResourcePackState.Loaded loaded = (ResourcePackState.Loaded) rnu.resourcePackState();
                 addPending(player, loaded.resourcePackInfo());
             }
-        }, plugin.config().resendingDelay());
+        }, rnu.config().resendingDelay());
 
     }
 
@@ -73,8 +73,8 @@ public class BukkitListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerResourcePackStatus(PlayerResourcePackStatusEvent event) {
         Player player = event.getPlayer();
-        if (pending.remove(player) != null) Bukkit.getScheduler().runTask(plugin, () -> {
-            RNUConfig config = plugin.config();
+        if (pending.remove(player) != null) Bukkit.getScheduler().runTask(rnu, () -> {
+            RNUConfig config = rnu.config();
             PlayerResourcePackStatusEvent.Status status = event.getStatus();
 
             switch (status.name()) {
@@ -102,7 +102,7 @@ public class BukkitListener implements Listener {
                     break;
                 default:
                     throw new IllegalStateException(
-                            "Invalid state. Is " + plugin.getName() + " outdated?"
+                            "Invalid state. Is " + rnu.getName() + " outdated?"
                     );
             }
         });
@@ -118,7 +118,7 @@ public class BukkitListener implements Listener {
 
     @SuppressWarnings("JavaReflectionMemberAccess")
     private BiConsumer<Player, ResourcePackInfo> extractResourcePackFunction() {
-        String setResourcePackError = "Target platform failed method call. Is " + plugin.getName() + " outdated?";
+        String setResourcePackError = "Target platform failed method call. Is " + rnu.getName() + " outdated?";
         Class<Player> pClass = Player.class;
         BiConsumer<Player, ResourcePackInfo> setResourcePackFunction;
         try {
@@ -216,15 +216,15 @@ public class BukkitListener implements Listener {
     }
 
     private void noUniqueId() {
-        plugin.getLogger().warning("Resource Pack `UUID` is not supported in this bukkit platform/version.");
+        rnu.getLogger().warning("Resource Pack `UUID` is not supported in this bukkit platform/version.");
     }
 
     private void noPrompt() {
-        plugin.getLogger().warning("Resource Pack `prompt` is not supported in this bukkit platform/version.");
+        rnu.getLogger().warning("Resource Pack `prompt` is not supported in this bukkit platform/version.");
     }
 
     private void noHash() {
-        plugin.getLogger().warning("Resource Pack `hash` is not supported in this bukkit platform/version.");
+        rnu.getLogger().warning("Resource Pack `hash` is not supported in this bukkit platform/version.");
     }
 
 }

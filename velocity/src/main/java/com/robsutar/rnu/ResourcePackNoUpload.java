@@ -68,7 +68,7 @@ public final class ResourcePackNoUpload implements TextureProviderBytes.StatePro
             loaded = load();
             resourcePackState = new ResourcePackState.LoadedPendingProvider(loaded);
         } catch (ResourcePackLoadException e) {
-            throw new RuntimeException("Initial loading failed, and the initial configuration could not be loaded, disabling plugin.", e);
+            throw new RuntimeException("Initial loading failed, and the initial configuration could not be loaded, disabling RNU.", e);
         }
 
         server.getEventManager().register(this, new VelocityListener(this));

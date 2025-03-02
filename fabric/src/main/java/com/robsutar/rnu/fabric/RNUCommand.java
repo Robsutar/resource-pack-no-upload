@@ -14,22 +14,22 @@ public class RNUCommand extends LiteralArgumentBuilder<CommandSourceStack> {
         requires(source -> source.hasPermission(2));
 
         then(LiteralArgumentBuilder.<CommandSourceStack>literal("reload").executes((context) -> {
-            ResourcePackNoUpload serverMod = hook.serverMod();
-            if (serverMod == null) return 0;
+            ResourcePackNoUpload rnu = hook.rnu();
+            if (rnu == null) return 0;
 
             CommandSourceStack source = context.getSource();
             try {
-                serverMod.load();
+                rnu.load();
                 // Is not an actual `failure`, but this method is the same for 1.19.x-1.20.1
-                source.sendFailure(serverMod.text("§aResource pack reloaded successfully!"));
+                source.sendFailure(rnu.text("§aResource pack reloaded successfully!"));
             } catch (ResourcePackLoadException e) {
-                if (serverMod.resourcePackState() instanceof ResourcePackState.Loading) {
-                    source.sendFailure(serverMod.text("§c§lERROR!§r §eResource pack is already being loaded!"));
+                if (rnu.resourcePackState() instanceof ResourcePackState.Loading) {
+                    source.sendFailure(rnu.text("§c§lERROR!§r §eResource pack is already being loaded!"));
                 } else {
-                    source.sendFailure(serverMod.text("§c§lERROR!§r §4Failed to reload resource pack. Message: §f" + e.getMessage()));
-                    source.sendFailure(serverMod.text("§eSee console for more info."));
-                    source.sendFailure(serverMod.text("§eThe resource pack sending is disabled."));
-                    source.sendFailure(serverMod.text("§e<italic>Once the problem is fixed, you can use `/rnu reload` again."));
+                    source.sendFailure(rnu.text("§c§lERROR!§r §4Failed to reload resource pack. Message: §f" + e.getMessage()));
+                    source.sendFailure(rnu.text("§eSee console for more info."));
+                    source.sendFailure(rnu.text("§eThe resource pack sending is disabled."));
+                    source.sendFailure(rnu.text("§e<italic>Once the problem is fixed, you can use `/rnu reload` again."));
                 }
             }
             return Command.SINGLE_SUCCESS;

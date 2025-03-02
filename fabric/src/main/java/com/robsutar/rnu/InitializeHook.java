@@ -20,17 +20,17 @@ public class InitializeHook implements ModInitializer {
 
     private final Logger logger = Logger.getLogger(ResourcePackNoUpload.class.getName());
 
-    private @Nullable ResourcePackNoUpload serverMod = null;
+    private @Nullable ResourcePackNoUpload rnu = null;
 
     @Override
     public void onInitialize() {
         instance = this;
 
         ServerLifecycleEvents.SERVER_STARTING.register((server) -> {
-            if (serverMod != null) throw new IllegalStateException();
+            if (rnu != null) throw new IllegalStateException();
             try {
-                serverMod = new ResourcePackNoUpload(server, logger);
-                serverMod.onEnable();
+                rnu = new ResourcePackNoUpload(server, logger);
+                rnu.onEnable();
             } catch (Exception e) {
                 logger.log(Level.SEVERE, e, () -> "Failed to enable ResourcePackNoUpload");
                 Throwable cause = e.getCause();
@@ -41,9 +41,9 @@ public class InitializeHook implements ModInitializer {
         });
 
         ServerLifecycleEvents.SERVER_STOPPED.register((server) -> {
-            if (serverMod == null) return;
-            serverMod.onDisable();
-            serverMod = null;
+            if (rnu == null) return;
+            rnu.onDisable();
+            rnu = null;
         });
 
         CommandRegistrationCallback.EVENT.register((dispatcher, environment) -> {
@@ -55,27 +55,27 @@ public class InitializeHook implements ModInitializer {
         });
 
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
-            if (serverMod == null) return;
+            if (rnu == null) return;
             ServerPlayer player = handler.player;
-            serverMod.listener().onPlayerJoin(player);
+            rnu.listener().onPlayerJoin(player);
         });
 
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
-            if (serverMod == null) return;
+            if (rnu == null) return;
             ServerPlayer player = handler.player;
-            serverMod.listener().onPlayerQuit(player);
+            rnu.listener().onPlayerQuit(player);
         });
 
         RNUPackLoadedCallback.EVENT.register((resourcePackInfo) -> {
-            if (serverMod == null) return;
-            // In the first server mod loading, the event is called before the listener
-            if (serverMod.listener() == null) return;
-            serverMod.listener().onRNUPackLoaded(resourcePackInfo);
+            if (rnu == null) return;
+            // In the first rnu loading, the event is called before the listener
+            if (rnu.listener() == null) return;
+            rnu.listener().onRNUPackLoaded(resourcePackInfo);
         });
     }
 
-    public @Nullable ResourcePackNoUpload serverMod() {
-        return serverMod;
+    public @Nullable ResourcePackNoUpload rnu() {
+        return rnu;
     }
 
     public static InitializeHook instance() {

@@ -21,8 +21,8 @@ public class MixinServerGamePacketListenerImpl {
 
     @Inject(method = "handleResourcePackResponse", at = @At("HEAD"))
     private void onHandleResourcePackResponse(ServerboundResourcePackPacket packet, CallbackInfo ci) {
-        ResourcePackNoUpload serverMod = InitializeHook.instance().serverMod();
-        if (serverMod == null) return;
+        ResourcePackNoUpload rnu = InitializeHook.instance().rnu();
+        if (rnu == null) return;
 
         // Unfortunately, the ServerboundResourcePackPacket#action field is not publicly accessible, so here we use a
         // bit of reflection to expose this field.
@@ -34,7 +34,7 @@ public class MixinServerGamePacketListenerImpl {
 
                 ServerboundResourcePackPacket.Action action = Objects.requireNonNull((ServerboundResourcePackPacket.Action) field.get(packet));
 
-                serverMod.listener().onPlayerResourcePackStatus(player, action);
+                rnu.listener().onPlayerResourcePackStatus(player, action);
                 return;
             } catch (IllegalAccessException ignored) {
             }

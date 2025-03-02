@@ -55,7 +55,7 @@ public class ResourcePackNoUpload implements TextureProviderBytes.StateProvider 
             loaded = load();
             resourcePackState = new ResourcePackState.LoadedPendingProvider(loaded);
         } catch (ResourcePackLoadException e) {
-            throw new RuntimeException("Initial loading failed, and the initial configuration could not be loaded, disabling plugin.", e);
+            throw new RuntimeException("Initial loading failed, and the initial configuration could not be loaded, disabling RNU.", e);
         }
 
         listener = new FabricListener(this);

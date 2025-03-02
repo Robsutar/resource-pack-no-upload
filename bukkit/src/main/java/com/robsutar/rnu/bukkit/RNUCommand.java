@@ -22,10 +22,10 @@ public class RNUCommand implements CommandExecutor, TabCompleter {
         SUGGESTIONS.add("reload");
     }
 
-    private final ResourcePackNoUpload plugin;
+    private final ResourcePackNoUpload rnu;
 
-    public RNUCommand(ResourcePackNoUpload plugin) {
-        this.plugin = plugin;
+    public RNUCommand(ResourcePackNoUpload rnu) {
+        this.rnu = rnu;
     }
 
     @Override
@@ -36,10 +36,10 @@ public class RNUCommand implements CommandExecutor, TabCompleter {
         }
 
         try {
-            plugin.load();
+            rnu.load();
             sender.sendMessage("§aResource pack reloaded successfully!");
         } catch (ResourcePackLoadException e) {
-            if (plugin.resourcePackState() instanceof ResourcePackState.Loading) {
+            if (rnu.resourcePackState() instanceof ResourcePackState.Loading) {
                 sender.sendMessage("§c§lERROR!§r §eResource pack is already being loaded!");
             } else {
                 sender.sendMessage("§c§lERROR!§r §4Failed to reload resource pack. Message: §f" + e.getMessage());
