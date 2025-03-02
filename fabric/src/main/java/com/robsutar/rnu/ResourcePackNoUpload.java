@@ -63,8 +63,7 @@ public class ResourcePackNoUpload implements TextureProviderBytes.StateProvider 
             try {
                 textureProviderBytes.run(() -> scheduler.runSync(() -> {
                     resourcePackState = loaded;
-                    getLogger().info("Resource pack provider bind address: " + textureProviderBytes.address());
-                    getLogger().info("Resource pack provider bind uri: " + textureProviderBytes.uri());
+                    getLogger().info("Resource pack provider bind");
                 }));
             } catch (Exception e) {
                 throw new IllegalStateException("Failed to bind texture provider bytes", e);
