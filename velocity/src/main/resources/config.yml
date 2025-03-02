@@ -29,4 +29,4 @@ loader:
   # In this example we are using a simple loader file, check all the loaders types here:
   # https://github.com/Robsutar/resource-pack-no-upload/?tab=readme-ov-file#creating-resource-pack-loader
   type: Manual
-  folder: "plugins/ResourcePackNoUpload/Cool Folder/"
+  folder: "rnu resource pack/Cool Folder/"

@@ -54,7 +54,7 @@ loader:
   # Is inside `Cool Folder` (for this example) the resource pack files should be.
   # Cool Folder/pack.mcmeta
   # Cool Folder/assets/minecraft...
-  folder: "plugins/ResourcePackNoUpload/Cool Folder/"
+  folder: "rnu resource pack/Cool Folder/"
   ```
 
 </details>
@@ -132,7 +132,7 @@ loader:
   # This can be any loader, For this loader example we are using simple Manual loader.
   loader:
     type: Manual
-    folder: "plugins/ResourcePackNoUpload/Cool Folder/"
+    folder: "rnu resource pack/Cool Folder/"
   ```
 
 </details>
@@ -150,7 +150,7 @@ loader:
   # their files will replace the other files.
   loaders:
     - type: Manual
-      folder: "plugins/ResourcePackNoUpload/Cool Folder/"
+      folder: "rnu resource pack/Cool Folder/"
     - type: Manual
       folder: "plugins/ModelEngine/resource pack/"
   ```
