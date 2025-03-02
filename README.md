@@ -2,12 +2,12 @@
 
 # ResourcePackNoUpload Plugin
 
-A Minecraft server plugin that allows server administrators to manage and distribute resource packs efficiently without
+A Minecraft server tool that allows server administrators to manage and distribute resource packs efficiently without
 requiring external hosting.
 
 ## Getting Started
 
-The plugin will generate the configuration templates if they do not
+The rnu will generate the configuration templates if they do not
 exist, but will not work without additional changes.
 Two things are important: defining the port for the resource pack provider, and the loader to load the resource pack.
 
@@ -40,7 +40,7 @@ The plugin config (reloadable with `/rnu reload`):
 - For RNU mod: `config/resourcepacknoupload/config.yml`
 
 ```yml
-# The texture pack loader, called every time that the resource pack is loaded by the plugin.
+# The texture pack loader, called every time that the resource pack is loaded by the rnu.
 loader:
   type: # Here is your loader type.
   # Additional loader fields, each type has their own fields.
@@ -67,7 +67,7 @@ loader:
 <details>
   <summary><strong>Download</strong> downloads from web, with http headers</summary>
   Downloads the resource pack from a link.
-  At first, it would be somewhat against the plugin's purpose, but this loader also
+  At first, it would be somewhat against the rnu purpose, but this loader also
   supports http headers for the download request, allowing you to download the
   resource,  pack with private keys, witch is not supported directly by the minecraft client.
 
@@ -164,5 +164,5 @@ loader:
 
 ## Additional Configurations
 
-There are other settings inside config.yml, such as messages and plugin behavior, refer to the automatically generated
+There are other settings inside config.yml, such as messages and rnu behavior, refer to the automatically generated
 config.yml.

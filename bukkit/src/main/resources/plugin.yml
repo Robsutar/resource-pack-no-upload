@@ -14,4 +14,4 @@ commands:
     usage: "rnu reload"
     permission: "resourcepacknoupload.admin"
     aliases: [ "rnu" ]
-    description: "Used to reload the plugin configuration and apply the loader again."
+    description: "Used to reload the rnu configuration and apply the loader again."

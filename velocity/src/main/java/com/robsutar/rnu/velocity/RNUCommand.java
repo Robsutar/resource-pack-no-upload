@@ -18,10 +18,10 @@ public class RNUCommand implements SimpleCommand {
         SUGGESTIONS.add("reload");
     }
 
-    private final ResourcePackNoUpload plugin;
+    private final ResourcePackNoUpload rnu;
 
-    public RNUCommand(ResourcePackNoUpload plugin) {
-        this.plugin = plugin;
+    public RNUCommand(ResourcePackNoUpload rnu) {
+        this.rnu = rnu;
     }
 
     @Override
@@ -41,21 +41,21 @@ public class RNUCommand implements SimpleCommand {
         CommandSource sender = invocation.source();
 
         if (args.length != 1 || !args[0].equals("reload")) {
-            sender.sendMessage(plugin.text("§cWrong command usage."));
+            sender.sendMessage(rnu.text("§cWrong command usage."));
             return;
         }
 
         try {
-            plugin.load();
-            sender.sendMessage(plugin.text("§aResource pack reloaded successfully!"));
+            rnu.load();
+            sender.sendMessage(rnu.text("§aResource pack reloaded successfully!"));
         } catch (ResourcePackLoadException e) {
-            if (plugin.resourcePackState() instanceof ResourcePackState.Loading) {
-                sender.sendMessage(plugin.text("§c§lERROR!§r §eResource pack is already being loaded!"));
+            if (rnu.resourcePackState() instanceof ResourcePackState.Loading) {
+                sender.sendMessage(rnu.text("§c§lERROR!§r §eResource pack is already being loaded!"));
             } else {
-                sender.sendMessage(plugin.text("§c§lERROR!§r §4Failed to reload resource pack. Message: §f" + e.getMessage()));
-                sender.sendMessage(plugin.text("§eSee console for more info."));
-                sender.sendMessage(plugin.text("§eThe resource pack sending is disabled."));
-                sender.sendMessage(plugin.text("§e<italic>Once the problem is fixed, you can use `/rnu reload` again."));
+                sender.sendMessage(rnu.text("§c§lERROR!§r §4Failed to reload resource pack. Message: §f" + e.getMessage()));
+                sender.sendMessage(rnu.text("§eSee console for more info."));
+                sender.sendMessage(rnu.text("§eThe resource pack sending is disabled."));
+                sender.sendMessage(rnu.text("§e<italic>Once the problem is fixed, you can use `/rnu reload` again."));
             }
         }
     }

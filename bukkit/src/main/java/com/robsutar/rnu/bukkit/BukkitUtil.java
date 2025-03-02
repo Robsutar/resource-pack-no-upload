@@ -1,6 +1,6 @@
 package com.robsutar.rnu.bukkit;
 
-import org.bukkit.plugin.java.JavaPlugin;
+import com.robsutar.rnu.ResourcePackNoUpload;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
@@ -13,14 +13,14 @@ import java.util.Map;
 public class BukkitUtil {
     private static final Yaml YAML = new Yaml();
 
-    public static <K, V> Map<K, V> loadOrCreateConfig(JavaPlugin plugin, String fileName) throws IllegalStateException {
-        File folder = plugin.getDataFolder();
+    public static <K, V> Map<K, V> loadOrCreateConfig(ResourcePackNoUpload rnu, String fileName) throws IllegalStateException {
+        File folder = rnu.getDataFolder();
         if (!folder.exists() && !folder.mkdir())
-            throw new IllegalStateException("Failed to create plugin folder");
+            throw new IllegalStateException("Failed to create rnu folder");
 
         File configFile = new File(folder, fileName);
         if (!configFile.exists()) {
-            plugin.saveResource(fileName, false);
+            rnu.saveResource(fileName, false);
         }
         try (InputStreamReader reader = new InputStreamReader(Files.newInputStream(configFile.toPath()), StandardCharsets.UTF_8)) {
             Map<K, V> mapToAdd = YAML.load(reader);
