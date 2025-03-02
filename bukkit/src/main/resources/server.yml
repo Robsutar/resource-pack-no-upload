@@ -1,10 +1,9 @@
 # The configuration of this file can not be reloaded at runtime.
 
-# This port needs to be open to the players
-# This field has no default value, manual set is required.
-# Example:
-# port: 25008
-port:
+# ATTENTION REQUIRED
+# Choose a door that is open to players, otherwise they will get a
+# FAILED_DOWNLOAD error when trying to download the resource pack.
+port: 25008
 
 # Provide the root address that will be sent to players, usually
 # `http://` + server's public IP + `:` + port defined above.
