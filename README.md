@@ -13,8 +13,10 @@ Two things are important: defining the port for the resource pack provider, and 
 
 ### Defining port
 
-The server config
-`plugins/ResourcePackNoUpload/server.yml`
+The server config:
+
+- For RNU plugin: `plugins/ResourcePackNoUpload/server.yml`
+- For RNU mod: `config/resourcepacknoupload/server.yml`
 
 ```yml
 # This server port needs to be open to the players
@@ -32,7 +34,10 @@ publicLinkRoot:
 
 ### Creating resource pack loader
 
-The plugin config (reloadable) `plugins/ResourcePackNoUpload/config.yml`
+The plugin config (reloadable with `/rnu reload`):
+
+- For RNU plugin: `plugins/ResourcePackNoUpload/config.yml`
+- For RNU mod: `config/resourcepacknoupload/config.yml`
 
 ```yml
 # The texture pack loader, called every time that the resource pack is loaded by the plugin.
