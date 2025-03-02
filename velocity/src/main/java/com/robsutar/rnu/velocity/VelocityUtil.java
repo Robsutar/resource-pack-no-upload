@@ -16,7 +16,7 @@ public class VelocityUtil {
     public static <K, V> Map<K, V> loadOrCreateConfig(ResourcePackNoUpload rnu, String fileName) throws IllegalStateException {
         File folder = rnu.getDataFolder();
         if (!folder.exists() && !folder.mkdir())
-            throw new IllegalStateException("Failed to create rnu folder");
+            throw new IllegalStateException("Failed to create RNU folder");
 
         File configFile = new File(folder, fileName);
         if (!configFile.exists()) {
