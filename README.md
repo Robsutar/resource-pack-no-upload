@@ -20,7 +20,7 @@ The server config:
 
 ```yml
 # This server port needs to be open to the players
-port: 3521 # Chose an open server port for the players.
+port: 25008 # Chose an open server port for the players.
 
 # Provide the root address that will be sent to players, usually
 # `http://` + server's public IP + `:` + port defined above.
