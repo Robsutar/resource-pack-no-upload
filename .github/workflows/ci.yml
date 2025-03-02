@@ -184,7 +184,7 @@ jobs:
             spigot
           game-versions: |
             >=1.8.8 <=1.21.4
-          name: ResourcePackNoUpload ${{ steps.next_version.outputs.NEXT_VERSION }}
+          name: ResourcePackNoUpload Bukkit ${{ steps.next_version.outputs.NEXT_VERSION }}
           version: ${{ steps.next_version.outputs.NEXT_VERSION }}
           version-type: release
           changelog: ${{ steps.get-tag-message.outputs.body }}
@@ -199,7 +199,7 @@ jobs:
             velocity
           game-versions: |
             >=1.8.8 <=1.21.4
-          name: ResourcePackNoUpload ${{ steps.next_version.outputs.NEXT_VERSION }}
+          name: ResourcePackNoUpload Velocity ${{ steps.next_version.outputs.NEXT_VERSION }}
           version: ${{ steps.next_version.outputs.NEXT_VERSION }}
           version-type: release
           changelog: ${{ steps.get-tag-message.outputs.body }}
@@ -214,7 +214,7 @@ jobs:
             fabric
           game-versions: |
             >=1.19 <=1.20.1
-          name: ResourcePackNoUpload ${{ steps.next_version.outputs.NEXT_VERSION }}
+          name: ResourcePackNoUpload Fabric ${{ steps.next_version.outputs.NEXT_VERSION }}
           version: ${{ steps.next_version.outputs.NEXT_VERSION }}
           version-type: release
           changelog: ${{ steps.get-tag-message.outputs.body }}
