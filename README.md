@@ -52,7 +52,7 @@ loader:
   <summary><strong>Manual</strong> simple loading from folder</summary>
   Uses an existing folder of any provided path.
 
-  ```yml
+```yml
   type: Manual
 
   # Relative to the server root folder.
@@ -60,7 +60,7 @@ loader:
   # Cool Folder/pack.mcmeta
   # Cool Folder/assets/minecraft...
   folder: "rnu resource pack/Cool Folder/"
-  ```
+```
 
 </details>
 
