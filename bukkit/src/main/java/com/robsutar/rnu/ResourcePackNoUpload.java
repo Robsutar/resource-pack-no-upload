@@ -47,7 +47,7 @@ public final class ResourcePackNoUpload extends JavaPlugin implements TexturePro
             try {
                 textureProviderBytes.run(() -> Bukkit.getScheduler().runTask(this, () -> {
                     resourcePackState = loaded;
-                    getLogger().info("Resource pack provider bind");
+                    getLogger().info("Resoruce pack provider initialized, its link is now available.");
                 }));
             } catch (Exception e) {
                 throw new IllegalStateException("Failed to bind texture provider bytes", e);
