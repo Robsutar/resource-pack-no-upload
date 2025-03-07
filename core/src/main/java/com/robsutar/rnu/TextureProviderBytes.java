@@ -8,6 +8,7 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.http.*;
+import io.netty.util.concurrent.Future;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.InetAddress;
@@ -21,6 +22,8 @@ public class TextureProviderBytes {
     private final InetSocketAddress address;
     private final URI uri;
     private Channel channel;
+    private EventLoopGroup bossGroup;
+    private EventLoopGroup workerGroup;
 
     public TextureProviderBytes(StateProvider stateProvider, String publicLinkRoot, int port) {
         this.stateProvider = stateProvider;
@@ -37,8 +40,8 @@ public class TextureProviderBytes {
     }
 
     public void run(Runnable beforeLock) throws Exception {
-        EventLoopGroup bossGroup = new NioEventLoopGroup(1);
-        EventLoopGroup workerGroup = new NioEventLoopGroup();
+        bossGroup = new NioEventLoopGroup(1);
+        workerGroup = new NioEventLoopGroup();
 
         try {
             channel = new ServerBootstrap()
@@ -71,7 +74,20 @@ public class TextureProviderBytes {
 
     public void close() {
         if (channel != null) {
-            channel.close();
+            try {
+                Future<?> channelClose = channel.close();
+                Future<?> bossGroupShutdown = bossGroup.shutdownGracefully();
+                Future<?> workerGroupShutdown = workerGroup.shutdownGracefully();
+
+                channelClose.sync();
+                bossGroupShutdown.sync();
+                workerGroupShutdown.sync();
+            } catch (Exception ignored) {
+            }
+
+            channel = null;
+            bossGroup = null;
+            workerGroup = null;
         }
     }
 
