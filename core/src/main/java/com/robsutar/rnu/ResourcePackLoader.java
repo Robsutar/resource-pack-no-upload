@@ -15,19 +15,20 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 public interface ResourcePackLoader {
-    Map<String, Consumer<ZipOutputStream>> appendFiles() throws Exception;
+    Map<String, Consumer<OutputStream>> appendFiles() throws Exception;
 
     default byte[] load() throws Exception {
         try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream(); ZipOutputStream zipOut = new ZipOutputStream(byteOut)) {
-            Map<String, Consumer<ZipOutputStream>> appended = appendFiles();
+            Map<String, Consumer<OutputStream>> appended = appendFiles();
 
-            for (Map.Entry<String, Consumer<ZipOutputStream>> entry : appended.entrySet()) {
-                Consumer<ZipOutputStream> writer = entry.getValue();
+            for (Map.Entry<String, Consumer<OutputStream>> entry : appended.entrySet()) {
+                Consumer<OutputStream> writer = entry.getValue();
                 String name = entry.getKey();
 
                 ZipEntry zipEntry = new ZipEntry(name);
@@ -68,16 +69,16 @@ public interface ResourcePackLoader {
         }
 
         @Override
-        public Map<String, Consumer<ZipOutputStream>> appendFiles() throws Exception {
+        public Map<String, Consumer<OutputStream>> appendFiles() throws Exception {
             if (!folder.exists() && !folder.mkdirs()) throw new Exception("Directory could not be created: " + folder);
             if (!folder.isDirectory()) throw new Exception("File is not directory: " + folder);
 
-            HashMap<String, Consumer<ZipOutputStream>> output = new HashMap<>();
+            HashMap<String, Consumer<OutputStream>> output = new HashMap<>();
             appendDirectory(output, folder, "");
             return output;
         }
 
-        private static void appendDirectory(Map<String, Consumer<ZipOutputStream>> output, File directory, String parentPath) {
+        private static void appendDirectory(Map<String, Consumer<OutputStream>> output, File directory, String parentPath) {
             File[] files = directory.listFiles();
             if (files != null) {
                 for (File file : files) {
@@ -124,8 +125,8 @@ public interface ResourcePackLoader {
         }
 
         @Override
-        public Map<String, Consumer<ZipOutputStream>> appendFiles() throws Exception {
-            HashMap<String, Consumer<ZipOutputStream>> output = new HashMap<>();
+        public Map<String, Consumer<OutputStream>> appendFiles() throws Exception {
+            HashMap<String, Consumer<OutputStream>> output = new HashMap<>();
 
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             for (Header header : headers) {
@@ -201,11 +202,11 @@ public interface ResourcePackLoader {
         }
 
         @Override
-        public Map<String, Consumer<ZipOutputStream>> appendFiles() throws Exception {
-            Map<String, Consumer<ZipOutputStream>> output = loader.appendFiles();
+        public Map<String, Consumer<OutputStream>> appendFiles() throws Exception {
+            Map<String, Consumer<OutputStream>> output = loader.appendFiles();
 
             Map<String, String> toMove = new HashMap<>();
-            for (Map.Entry<String, Consumer<ZipOutputStream>> entry : output.entrySet()) {
+            for (Map.Entry<String, Consumer<OutputStream>> entry : output.entrySet()) {
                 String name = entry.getKey();
                 @Nullable String newName = removeShape(folder, name, false);
                 if (newName != null) {
@@ -218,7 +219,7 @@ public interface ResourcePackLoader {
                 }
             }
             for (Map.Entry<String, String> entry : toMove.entrySet()) {
-                Consumer<ZipOutputStream> applier = Objects.requireNonNull(output.remove(entry.getKey()));
+                Consumer<OutputStream> applier = Objects.requireNonNull(output.remove(entry.getKey()));
                 output.put(entry.getValue(), applier);
             }
 
@@ -262,11 +263,11 @@ public interface ResourcePackLoader {
         }
 
         @Override
-        public Map<String, Consumer<ZipOutputStream>> appendFiles() throws Exception {
-            Map<String, Consumer<ZipOutputStream>> output = loader.appendFiles();
+        public Map<String, Consumer<OutputStream>> appendFiles() throws Exception {
+            Map<String, Consumer<OutputStream>> output = loader.appendFiles();
 
             List<String> toRemove = new ArrayList<>();
-            for (Map.Entry<String, Consumer<ZipOutputStream>> entry : output.entrySet()) {
+            for (Map.Entry<String, Consumer<OutputStream>> entry : output.entrySet()) {
                 String name = entry.getKey();
                 if (toDeletePattern.matches(new File(name).toPath())) {
                     toRemove.add(name);
@@ -281,17 +282,17 @@ public interface ResourcePackLoader {
     }
 
     class Merged implements ResourcePackLoader {
-        private final List<ResourcePackLoader> loaders = new ArrayList<>();
+        private final List<ResourcePackLoader> loaders;
 
         public Merged(File tempFolder, Map<String, Object> raw) {
-            for (Map<String, Object> loaderRaw : OC.<Map<String, Object>>list(raw.get("loaders"))) {
-                loaders.add(deserialize(tempFolder, loaderRaw));
-            }
+            loaders = OC.<Map<String, Object>>list(raw.get("loaders")).stream()
+                    .map((loaderRaw) -> deserialize(tempFolder, loaderRaw))
+                    .collect(Collectors.toList());
         }
 
         @Override
-        public Map<String, Consumer<ZipOutputStream>> appendFiles() throws Exception {
-            HashMap<String, Consumer<ZipOutputStream>> output = new HashMap<>();
+        public Map<String, Consumer<OutputStream>> appendFiles() throws Exception {
+            HashMap<String, Consumer<OutputStream>> output = new HashMap<>();
             for (int i = loaders.size() - 1; i >= 0; i--) {
                 ResourcePackLoader loader = loaders.get(i);
                 output.putAll(loader.appendFiles());
