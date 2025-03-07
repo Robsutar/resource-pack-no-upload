@@ -149,6 +149,11 @@ loader:
 ```yml
   type: Merged
 
+  # Optional field, this is a list of paths to merge json files list entries, particularly
+  # useful to merge custom model data automatically. 
+  mergedJsonLists:
+    - "assets/minecraft/models/item/**.json"
+
   # This is a list, for each entry you need to specify the values of the desired loader.
   # See their how to configure each type in the examples above.
   # For overriding cases, loaders on the top of the list have major priority, this is,
