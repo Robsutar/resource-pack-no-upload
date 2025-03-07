@@ -18,15 +18,15 @@ import java.net.UnknownHostException;
 import java.util.Map;
 
 public class TextureProviderBytes {
-    private final StateProvider stateProvider;
+    private final IResourcePackNoUploadInternal rnu;
     private final InetSocketAddress address;
     private final URI uri;
     private Channel channel;
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
 
-    public TextureProviderBytes(StateProvider stateProvider, String publicLinkRoot, int port) {
-        this.stateProvider = stateProvider;
+    public TextureProviderBytes(IResourcePackNoUploadInternal rnu, String publicLinkRoot, int port) {
+        this.rnu = rnu;
         address = new InetSocketAddress(port);
         uri = URI.create(publicLinkRoot);
     }
@@ -94,7 +94,7 @@ public class TextureProviderBytes {
     private class LastChildHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
         @Override
         protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest request) {
-            ResourcePackState state = stateProvider.resourcePackState();
+            ResourcePackState state = rnu.resourcePackState();
             if (state instanceof ResourcePackState.Loaded) {
                 ResourcePackState.Loaded loaded = (ResourcePackState.Loaded) state;
                 if (loaded.resourcePackInfo().uri().endsWith(request.uri())) {
@@ -129,7 +129,7 @@ public class TextureProviderBytes {
         }
     }
 
-    public static TextureProviderBytes deserialize(StateProvider stateProvider, @Nullable String serverIp, Map<String, Object> raw) {
+    public static TextureProviderBytes deserialize(IResourcePackNoUploadInternal rnu, @Nullable String serverIp, Map<String, Object> raw) {
         if (raw.get("port") == null)
             throw new IllegalArgumentException(
                     "Port undefined in configuration!\n" +
@@ -150,10 +150,6 @@ public class TextureProviderBytes {
             publicLinkRoot = "http://" + publicLinkRoot + ":" + port;
         }
 
-        return new TextureProviderBytes(stateProvider, publicLinkRoot, port);
-    }
-
-    public interface StateProvider {
-        ResourcePackState resourcePackState();
+        return new TextureProviderBytes(rnu, publicLinkRoot, port);
     }
 }

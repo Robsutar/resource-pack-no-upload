@@ -1,5 +1,7 @@
 package com.robsutar.rnu;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.robsutar.rnu.util.OC;
 import org.jetbrains.annotations.Nullable;
 
@@ -8,6 +10,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.PathMatcher;
@@ -15,19 +18,20 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 public interface ResourcePackLoader {
-    Map<String, Consumer<ZipOutputStream>> appendFiles() throws Exception;
+    Map<String, Consumer<OutputStream>> appendFiles() throws Exception;
 
     default byte[] load() throws Exception {
         try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream(); ZipOutputStream zipOut = new ZipOutputStream(byteOut)) {
-            Map<String, Consumer<ZipOutputStream>> appended = appendFiles();
+            Map<String, Consumer<OutputStream>> appended = appendFiles();
 
-            for (Map.Entry<String, Consumer<ZipOutputStream>> entry : appended.entrySet()) {
-                Consumer<ZipOutputStream> writer = entry.getValue();
+            for (Map.Entry<String, Consumer<OutputStream>> entry : appended.entrySet()) {
+                Consumer<OutputStream> writer = entry.getValue();
                 String name = entry.getKey();
 
                 ZipEntry zipEntry = new ZipEntry(name);
@@ -68,26 +72,26 @@ public interface ResourcePackLoader {
         }
 
         @Override
-        public Map<String, Consumer<ZipOutputStream>> appendFiles() throws Exception {
+        public Map<String, Consumer<OutputStream>> appendFiles() throws Exception {
             if (!folder.exists() && !folder.mkdirs()) throw new Exception("Directory could not be created: " + folder);
             if (!folder.isDirectory()) throw new Exception("File is not directory: " + folder);
 
-            HashMap<String, Consumer<ZipOutputStream>> output = new HashMap<>();
+            HashMap<String, Consumer<OutputStream>> output = new HashMap<>();
             appendDirectory(output, folder, "");
             return output;
         }
 
-        private static void appendDirectory(Map<String, Consumer<ZipOutputStream>> output, File directory, String parentPath) {
+        private static void appendDirectory(Map<String, Consumer<OutputStream>> output, File directory, String parentPath) {
             File[] files = directory.listFiles();
             if (files != null) {
                 for (File file : files) {
                     if (file.isFile()) {
-                        output.put(parentPath + file.getName(), (zipOut) -> {
+                        output.put(parentPath + file.getName(), (out) -> {
                             try (FileInputStream fileIn = new FileInputStream(file)) {
                                 byte[] buffer = new byte[1024];
                                 int len;
                                 while ((len = fileIn.read(buffer)) > 0) {
-                                    zipOut.write(buffer, 0, len);
+                                    out.write(buffer, 0, len);
                                 }
                             } catch (IOException e) {
                                 throw new RuntimeException(e);
@@ -124,8 +128,8 @@ public interface ResourcePackLoader {
         }
 
         @Override
-        public Map<String, Consumer<ZipOutputStream>> appendFiles() throws Exception {
-            HashMap<String, Consumer<ZipOutputStream>> output = new HashMap<>();
+        public Map<String, Consumer<OutputStream>> appendFiles() throws Exception {
+            HashMap<String, Consumer<OutputStream>> output = new HashMap<>();
 
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             for (Header header : headers) {
@@ -149,9 +153,9 @@ public interface ResourcePackLoader {
                             byteStream.write(buffer, 0, len);
                         }
                         byte[] data = byteStream.toByteArray();
-                        output.put(zipEntry.getName(), zipOut -> {
+                        output.put(zipEntry.getName(), out -> {
                             try {
-                                zipOut.write(data);
+                                out.write(data);
                             } catch (IOException e) {
                                 throw new RuntimeException(e);
                             }
@@ -201,11 +205,11 @@ public interface ResourcePackLoader {
         }
 
         @Override
-        public Map<String, Consumer<ZipOutputStream>> appendFiles() throws Exception {
-            Map<String, Consumer<ZipOutputStream>> output = loader.appendFiles();
+        public Map<String, Consumer<OutputStream>> appendFiles() throws Exception {
+            Map<String, Consumer<OutputStream>> output = loader.appendFiles();
 
             Map<String, String> toMove = new HashMap<>();
-            for (Map.Entry<String, Consumer<ZipOutputStream>> entry : output.entrySet()) {
+            for (Map.Entry<String, Consumer<OutputStream>> entry : output.entrySet()) {
                 String name = entry.getKey();
                 @Nullable String newName = removeShape(folder, name, false);
                 if (newName != null) {
@@ -218,7 +222,7 @@ public interface ResourcePackLoader {
                 }
             }
             for (Map.Entry<String, String> entry : toMove.entrySet()) {
-                Consumer<ZipOutputStream> applier = Objects.requireNonNull(output.remove(entry.getKey()));
+                Consumer<OutputStream> applier = Objects.requireNonNull(output.remove(entry.getKey()));
                 output.put(entry.getValue(), applier);
             }
 
@@ -262,11 +266,11 @@ public interface ResourcePackLoader {
         }
 
         @Override
-        public Map<String, Consumer<ZipOutputStream>> appendFiles() throws Exception {
-            Map<String, Consumer<ZipOutputStream>> output = loader.appendFiles();
+        public Map<String, Consumer<OutputStream>> appendFiles() throws Exception {
+            Map<String, Consumer<OutputStream>> output = loader.appendFiles();
 
             List<String> toRemove = new ArrayList<>();
-            for (Map.Entry<String, Consumer<ZipOutputStream>> entry : output.entrySet()) {
+            for (Map.Entry<String, Consumer<OutputStream>> entry : output.entrySet()) {
                 String name = entry.getKey();
                 if (toDeletePattern.matches(new File(name).toPath())) {
                     toRemove.add(name);
@@ -281,22 +285,98 @@ public interface ResourcePackLoader {
     }
 
     class Merged implements ResourcePackLoader {
-        private final List<ResourcePackLoader> loaders = new ArrayList<>();
+        private static final Gson GSON = new Gson();
+
+        private final List<PathMatcher> mergedJsonLists;
+        private final List<ResourcePackLoader> loaders;
 
         public Merged(File tempFolder, Map<String, Object> raw) {
-            for (Map<String, Object> loaderRaw : OC.<Map<String, Object>>list(raw.get("loaders"))) {
-                loaders.add(deserialize(tempFolder, loaderRaw));
-            }
+            mergedJsonLists = OC.<String>list(raw.get("mergedJsonLists")).stream()
+                    .map((pattern) -> FileSystems.getDefault().getPathMatcher("glob:" + pattern))
+                    .collect(Collectors.toList());
+
+            loaders = OC.<Map<String, Object>>list(raw.get("loaders")).stream()
+                    .map((loaderRaw) -> deserialize(tempFolder, loaderRaw))
+                    .collect(Collectors.toList());
         }
 
         @Override
-        public Map<String, Consumer<ZipOutputStream>> appendFiles() throws Exception {
-            HashMap<String, Consumer<ZipOutputStream>> output = new HashMap<>();
+        public Map<String, Consumer<OutputStream>> appendFiles() throws Exception {
+            HashMap<String, Consumer<OutputStream>> output = new HashMap<>();
             for (int i = loaders.size() - 1; i >= 0; i--) {
                 ResourcePackLoader loader = loaders.get(i);
-                output.putAll(loader.appendFiles());
+                for (Map.Entry<String, Consumer<OutputStream>> entry : loader.appendFiles().entrySet()) {
+                    String name = entry.getKey();
+                    Consumer<OutputStream> replacement = entry.getValue();
+                    @Nullable Consumer<OutputStream> existing = output.get(name);
+
+                    if (existing == null) {
+                        output.put(name, replacement);
+                    } else {
+                        for (PathMatcher matcher : mergedJsonLists) {
+                            if (matcher.matches(new File(name).toPath())) {
+                                Map<Object, Object> existingMap;
+                                {
+                                    ByteArrayOutputStream outRaw = new ByteArrayOutputStream();
+                                    existing.accept(outRaw);
+                                    String out = outRaw.toString(StandardCharsets.UTF_8.name());
+                                    existingMap = GSON.fromJson(out, new TypeToken<Map<Object, Object>>() {
+                                    }.getType());
+                                }
+
+                                Map<Object, Object> replacementMap;
+                                {
+                                    ByteArrayOutputStream outRaw = new ByteArrayOutputStream();
+                                    replacement.accept(outRaw);
+                                    String out = outRaw.toString(StandardCharsets.UTF_8.name());
+                                    replacementMap = GSON.fromJson(out, new TypeToken<Map<Object, Object>>() {
+                                    }.getType());
+                                }
+
+                                Map<Object, Object> mergedMap = mergeMaps(existingMap, replacementMap);
+
+                                output.put(name, (OutputStream out) -> {
+                                    try {
+                                        Writer writer = new OutputStreamWriter(out, StandardCharsets.UTF_8);
+                                        GSON.toJson(mergedMap, writer);
+                                        writer.flush();
+                                    } catch (IOException e) {
+                                        throw new RuntimeException(e);
+                                    }
+                                });
+                                break;
+                            }
+                        }
+                    }
+                }
             }
             return output;
+        }
+
+
+        @SuppressWarnings("unchecked")
+        private static Map<Object, Object> mergeMaps(Map<Object, Object> existing, Map<Object, Object> replacement) {
+            for (Map.Entry<Object, Object> entry : replacement.entrySet()) {
+                Object key = entry.getKey();
+                Object value = entry.getValue();
+
+                if (existing.containsKey(key)) {
+                    Object existingValue = existing.get(key);
+
+                    if (existingValue instanceof Map && value instanceof Map) {
+                        existing.put(key, mergeMaps((Map<Object, Object>) existingValue, (Map<Object, Object>) value));
+                    } else if (existingValue instanceof List && value instanceof List) {
+                        List<Object> mergedList = new ArrayList<>((List<Object>) existingValue);
+                        mergedList.addAll((List<Object>) value);
+                        existing.put(key, mergedList);
+                    } else {
+                        existing.put(key, value);
+                    }
+                } else {
+                    existing.put(key, value);
+                }
+            }
+            return existing;
         }
     }
 }

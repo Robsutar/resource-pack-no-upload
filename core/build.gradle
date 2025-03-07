@@ -7,5 +7,7 @@ repositories {
 
 dependencies {
     implementation libs.netty
+    compileOnly libs.snakeyaml
+    compileOnly libs.gson
     compileOnly 'org.jetbrains:annotations:23.0.0'
 }
