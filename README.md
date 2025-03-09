@@ -69,7 +69,7 @@ loader:
   Downloads the resource pack from a link.
   At first, it would be somewhat against the RNU purpose, but this loader also
   supports http headers for the download request, allowing you to download the
-  resource,  pack with private keys, witch is not supported directly by the minecraft client.
+  resource,  pack with private keys, which is not supported directly by the minecraft client.
 
 ```yml
   type: Download
