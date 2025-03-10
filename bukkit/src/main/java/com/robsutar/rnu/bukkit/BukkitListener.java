@@ -29,8 +29,11 @@ public class BukkitListener implements Listener {
     public BukkitListener(ResourcePackNoUpload rnu) {
         this.rnu = rnu;
         setResourcePackFunction = extractResourcePackFunction();
+    }
 
+    public void register() {
         Bukkit.getScheduler().runTaskTimer(rnu, this::checkPending, rnu.config().resendingDelay(), rnu.config().resendingDelay());
+        Bukkit.getPluginManager().registerEvents(this, rnu);
     }
 
     private void checkPending() {

@@ -36,6 +36,7 @@ public final class ResourcePackNoUpload implements IResourcePackNoUploadInternal
     private final Logger logger;
 
     private final Impl impl = new Impl(this);
+    private final VelocityListener listener = new VelocityListener(this);
 
     @Inject
     public ResourcePackNoUpload(ProxyServer server, Logger logger) {
@@ -56,6 +57,7 @@ public final class ResourcePackNoUpload implements IResourcePackNoUploadInternal
     @Override
     public void onInitialConfigLoaded() {
         server.getEventManager().register(this, new VelocityListener(this));
+        listener.register();
 
         CommandMeta commandMeta = server.getCommandManager().metaBuilder("resourcepacknoupload")
                 .aliases("rnu")

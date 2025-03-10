@@ -10,6 +10,7 @@ import java.util.Objects;
 
 public final class ResourcePackNoUpload extends JavaPlugin implements IResourcePackNoUploadInternal {
     private final Impl impl = new Impl(this);
+    private final BukkitListener listener = new BukkitListener(this);
 
     @Override
     public void onEnable() {
@@ -24,6 +25,7 @@ public final class ResourcePackNoUpload extends JavaPlugin implements IResourceP
     @Override
     public void onInitialConfigLoaded() {
         Bukkit.getPluginManager().registerEvents(new BukkitListener(this), this);
+        listener.register();
         Objects.requireNonNull(getCommand("resourcepacknoupload")).setExecutor(new RNUCommand(this));
     }
 
