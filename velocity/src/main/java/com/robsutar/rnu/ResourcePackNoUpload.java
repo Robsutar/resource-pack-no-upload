@@ -1,6 +1,7 @@
 package com.robsutar.rnu;
 
 import com.google.inject.Inject;
+import com.robsutar.rnu.util.OC;
 import com.robsutar.rnu.velocity.RNUCommand;
 import com.robsutar.rnu.velocity.RNUPackLoadedEvent;
 import com.robsutar.rnu.velocity.VelocityListener;
@@ -179,8 +180,9 @@ public final class ResourcePackNoUpload implements IResourcePackNoUploadInternal
 
     private void loadAutoReloading() {
         Map<String, List<Map<String, Object>>> config = loadOrCreateConfig("autoReloading.yml");
+        List<Map<String, Object>> invokersRaw = OC.list(config.get("invokers"));
 
-        List<AutoReloadingInvoker<Object>> invokers = config.get("invokers").stream()
+        List<AutoReloadingInvoker<Object>> invokers = invokersRaw.stream()
                 .map(AutoReloadingInvoker::deserialize)
                 .collect(Collectors.toList());
 

@@ -3,6 +3,7 @@ package com.robsutar.rnu;
 import com.robsutar.rnu.bukkit.BukkitListener;
 import com.robsutar.rnu.bukkit.RNUCommand;
 import com.robsutar.rnu.bukkit.RNUPackLoadedEvent;
+import com.robsutar.rnu.util.OC;
 import org.bukkit.Bukkit;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventPriority;
@@ -64,8 +65,9 @@ public final class ResourcePackNoUpload extends JavaPlugin implements IResourceP
 
     private void loadAutoReloading() {
         Map<String, List<Map<String, Object>>> config = loadOrCreateConfig("autoReloading.yml");
+        List<Map<String, Object>> invokersRaw = OC.list(config.get("invokers"));
 
-        List<AutoReloadingInvoker<Event>> invokers = config.get("invokers").stream()
+        List<AutoReloadingInvoker<Event>> invokers = invokersRaw.stream()
                 .map(AutoReloadingInvoker::<Event>deserialize)
                 .collect(Collectors.toList());
 
