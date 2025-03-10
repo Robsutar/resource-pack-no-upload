@@ -178,8 +178,10 @@ invokers:
   # The event class, this is very specific to each case.
   # Here we will use a ModelEngine event.
   - eventClass: "com.ticxo.modelengine.api.events.ModelRegistrationEvent"
+
     # The delay in ticks after the event being called.
     delay: 10 # Default is 1.
+
     # The cooldown before this event can call the reload again.
     # Here we add a cooldown because in the case of ModelEngine, the
     # `ModelRegistrationEvent` event is called a few times in `/meg reload`, this
