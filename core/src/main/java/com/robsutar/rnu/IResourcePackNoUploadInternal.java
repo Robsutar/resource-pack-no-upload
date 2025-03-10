@@ -53,6 +53,27 @@ public interface IResourcePackNoUploadInternal {
         return impl().load();
     }
 
+    default <K, V> Map<K, V> loadOrCreateConfig(String fileName) throws IllegalStateException {
+        IResourcePackNoUploadInternal rnu = impl().rnu;
+        File folder = rnu.getDataFolder();
+        if (!folder.exists() && !folder.mkdir())
+            throw new IllegalStateException("Failed to create RNU folder");
+
+        File configFile = new File(folder, fileName);
+        if (!configFile.exists()) {
+            rnu.saveResource(fileName, false);
+        }
+        try (InputStreamReader reader = new InputStreamReader(Files.newInputStream(configFile.toPath()), StandardCharsets.UTF_8)) {
+            Map<K, V> mapToAdd = Impl.YAML.load(reader);
+            if (mapToAdd == null) {
+                throw new IllegalArgumentException("null/empty yml: " + configFile);
+            }
+            return mapToAdd;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     class Impl {
         private static final Yaml YAML = new Yaml();
 
@@ -69,7 +90,7 @@ public interface IResourcePackNoUploadInternal {
             textureProviderBytes = TextureProviderBytes.deserialize(
                     rnu,
                     rnu.getServerIp(),
-                    loadOrCreateConfig("server.yml")
+                    rnu.loadOrCreateConfig("server.yml")
             );
 
             ResourcePackState.Loaded loaded;
@@ -125,7 +146,7 @@ public interface IResourcePackNoUploadInternal {
                 Map<String, Object> configRaw;
 
                 try {
-                    configRaw = loadOrCreateConfig("config.yml");
+                    configRaw = rnu.loadOrCreateConfig("config.yml");
                 } catch (IllegalStateException e) {
                     throw new ResourcePackLoadException("Failed to load configuration file.", e);
                 }
@@ -169,26 +190,6 @@ public interface IResourcePackNoUploadInternal {
             } catch (Exception e) {
                 resourcePackState = new ResourcePackState.FailedToLoad();
                 throw new ResourcePackLoadException("Unexpected and unknown error", e);
-            }
-        }
-
-        private <K, V> Map<K, V> loadOrCreateConfig(String fileName) throws IllegalStateException {
-            File folder = rnu.getDataFolder();
-            if (!folder.exists() && !folder.mkdir())
-                throw new IllegalStateException("Failed to create RNU folder");
-
-            File configFile = new File(folder, fileName);
-            if (!configFile.exists()) {
-                rnu.saveResource(fileName, false);
-            }
-            try (InputStreamReader reader = new InputStreamReader(Files.newInputStream(configFile.toPath()), StandardCharsets.UTF_8)) {
-                Map<K, V> mapToAdd = YAML.load(reader);
-                if (mapToAdd == null) {
-                    throw new IllegalArgumentException("null/empty yml: " + configFile);
-                }
-                return mapToAdd;
-            } catch (IOException e) {
-                throw new RuntimeException(e);
             }
         }
     }

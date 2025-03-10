@@ -23,8 +23,15 @@ import java.net.InetAddress;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.file.Files;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @Plugin(id = "resource-pack-no-upload",
         name = "@name@",
@@ -36,6 +43,7 @@ public final class ResourcePackNoUpload implements IResourcePackNoUploadInternal
     private final Logger logger;
 
     private final Impl impl = new Impl(this);
+    private final VelocityListener listener = new VelocityListener(this);
 
     @Inject
     public ResourcePackNoUpload(ProxyServer server, Logger logger) {
@@ -55,7 +63,8 @@ public final class ResourcePackNoUpload implements IResourcePackNoUploadInternal
 
     @Override
     public void onInitialConfigLoaded() {
-        server.getEventManager().register(this, new VelocityListener(this));
+        loadAutoReloading();
+        listener.register();
 
         CommandMeta commandMeta = server.getCommandManager().metaBuilder("resourcepacknoupload")
                 .aliases("rnu")
@@ -166,5 +175,36 @@ public final class ResourcePackNoUpload implements IResourcePackNoUploadInternal
 
     public Component text(String legacy) {
         return LegacyComponentSerializer.legacySection().deserialize(legacy);
+    }
+
+    private void loadAutoReloading() {
+        Map<String, List<Map<String, Object>>> config = loadOrCreateConfig("autoReloading.yml");
+
+        List<AutoReloadingInvoker<Object>> invokers = config.get("invokers").stream()
+                .map(AutoReloadingInvoker::deserialize)
+                .collect(Collectors.toList());
+
+
+        for (AutoReloadingInvoker<Object> invoker : invokers) {
+            Duration repeatCooldown = Duration.ofMillis(invoker.repeatCooldown() * 50L);
+            AtomicReference<Instant> lastUsed = new AtomicReference<>(Instant.now().minus(repeatCooldown));
+            getServer().getEventManager().register(
+                    this,
+                    invoker.eventClass(),
+                    (e) -> getServer().getScheduler().buildTask(
+                            this,
+                            () -> {
+                                Instant now = Instant.now();
+                                if (Duration.between(lastUsed.get(), now).compareTo(repeatCooldown) > 0 &&
+                                        !(resourcePackState() instanceof ResourcePackState.Loading)
+                                ) {
+                                    lastUsed.set(now);
+                                    getServer().getCommandManager().executeAsync(
+                                            getServer().getConsoleCommandSource(), "rnu reload"
+                                    );
+                                }
+                            }).delay(invoker.delay() * 50L, TimeUnit.MILLISECONDS).schedule()
+            );
+        }
     }
 }

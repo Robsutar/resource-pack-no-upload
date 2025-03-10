@@ -21,10 +21,13 @@ public class VelocityListener {
 
     public VelocityListener(ResourcePackNoUpload rnu) {
         this.rnu = rnu;
+    }
 
+    public void register() {
         rnu.getServer().getScheduler().buildTask(rnu, this::checkPending)
                 .repeat(rnu.config().resendingDelay() * 50L, TimeUnit.MILLISECONDS)
                 .schedule();
+        rnu.getServer().getEventManager().register(rnu, this);
     }
 
     private void checkPending() {

@@ -18,7 +18,7 @@ The server config:
 - For RNU plugin: `plugins/ResourcePackNoUpload/server.yml`
 - For RNU mod: `config/resourcepacknoupload/server.yml`
 
-```yml
+```yaml
 # This server port needs to be open to the players
 port: 25008 # Chose an open server port for the players.
 
@@ -39,7 +39,7 @@ The plugin config (reloadable with `/rnu reload`):
 - For RNU plugin: `plugins/ResourcePackNoUpload/config.yml`
 - For RNU mod: `config/resourcepacknoupload/config.yml`
 
-```yml
+```yaml
 # The texture pack loader, called every time that the resource pack is loaded by the RNU.
 loader:
   type: # Here is your loader type.
@@ -52,7 +52,7 @@ loader:
   <summary><strong>Manual</strong> simple loading from folder</summary>
   Uses an existing folder of any provided path.
 
-```yml
+```yaml
   type: Manual
 
   # Relative to the server root folder.
@@ -71,7 +71,7 @@ loader:
   supports http headers for the download request, allowing you to download the
   resource,  pack with private keys, which is not supported directly by the minecraft client.
 
-```yml
+```yaml
   type: Download
 
   # The link for the download.
@@ -90,7 +90,7 @@ loader:
   <summary><strong>WithMovedFiles</strong> modify the files from another loader</summary>
   Move loader provided resource pack files from a directory, to another.
 
-```yml
+```yaml
   type: WithMovedFiles
 
   # The folder contents to be moved. Supports unknown paths, for they use `?`.
@@ -123,7 +123,7 @@ loader:
   <summary><strong>WithDeletedFiles</strong> modify the files from another loader</summary>
   Ignore the files of the loader if they match with a provided path.
 
-```yml
+```yaml
   type: WithDeletedFiles
 
   # The path to ignored, supports glob file matching. In this example, we delete all
@@ -146,7 +146,7 @@ loader:
   <summary><strong>Merged</strong> loads and merges resource packs from a list of loaders</summary>
   Combines multiple loaders, prioritizing the first ones in the list.
 
-```yml
+```yaml
   type: Merged
 
   # Optional field, this is a list of paths to merge json files list entries, particularly
@@ -166,6 +166,26 @@ loader:
   ```
 
 </details>
+
+## Auto reloading
+
+It is possible to make the RNU (**only the plugin**) reload automatically on event call.
+
+The auto reloading config: `plugins/ResourcePackNoUpload/autoReloading.yml`
+
+```yaml
+invokers:
+  # The event class, this is very specific to each case.
+  # Here we will use a ModelEngine event.
+  - eventClass: "com.ticxo.modelengine.api.events.ModelRegistrationEvent"
+    # The delay in ticks after the event being called.
+    delay: 10 # Default is 1.
+    # The cooldown before this event can call the reload again.
+    # Here we add a cooldown because in the case of ModelEngine, the
+    # `ModelRegistrationEvent` event is called a few times in `/meg reload`, this
+    # cooldown will make the reload be executed only once.
+    repeatCooldown: 10 # Default is 0.
+```
 
 ## Additional Configurations
 
