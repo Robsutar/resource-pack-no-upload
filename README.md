@@ -152,7 +152,10 @@ loader:
   # Optional field, this is a list of paths to merge json files list entries, particularly
   # useful to merge custom model data automatically. 
   mergedJsonLists:
-    - "assets/minecraft/models/item/**.json"
+    - files: "assets/minecraft/models/item/**.json"
+      # The numeric field used to order the json entries, in the case of custom model data,
+      # entries must necessarily be ordered
+      orderBy: "predicate.custom_model_data"
 
   # This is a list, for each entry you need to specify the values of the desired loader.
   # See their how to configure each type in the examples above.
