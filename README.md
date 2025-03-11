@@ -154,7 +154,7 @@ loader:
   mergedJsonLists:
     - files: "assets/minecraft/models/item/**.json"
       # The numeric field used to order the json entries, in the case of custom model data,
-      # entries must necessarily be ordered
+      # entries must necessarily be ordered.
       orderBy: "predicate.custom_model_data"
 
   # This is a list, for each entry you need to specify the values of the desired loader.
