@@ -3,6 +3,7 @@ package com.robsutar.rnu;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.robsutar.rnu.util.OC;
+import com.robsutar.rnu.util.Pair;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
@@ -287,12 +288,17 @@ public interface ResourcePackLoader {
     class Merged implements ResourcePackLoader {
         private static final Gson GSON = new Gson();
 
-        private final List<PathMatcher> mergedJsonLists;
+        private final List<Pair<PathMatcher, @Nullable String>> mergedJsonLists;
         private final List<ResourcePackLoader> loaders;
 
         public Merged(File tempFolder, Map<String, Object> raw) {
-            mergedJsonLists = OC.<String>list(raw.get("mergedJsonLists")).stream()
-                    .map((pattern) -> FileSystems.getDefault().getPathMatcher("glob:" + pattern))
+            mergedJsonLists = OC.<Map<String, String>>list(raw.get("mergedJsonLists")).stream()
+                    .map((raw1) -> new Pair<>(
+                            FileSystems.getDefault().getPathMatcher(
+                                    "glob:" + Objects.requireNonNull(raw1.get("files"))
+                            ),
+                            raw1.get("orderBy")
+                    ))
                     .collect(Collectors.toList());
 
             loaders = OC.<Map<String, Object>>list(raw.get("loaders")).stream()
@@ -313,7 +319,9 @@ public interface ResourcePackLoader {
                     if (existing == null) {
                         output.put(name, replacement);
                     } else {
-                        for (PathMatcher matcher : mergedJsonLists) {
+                        for (Pair<PathMatcher, @Nullable String> pair : mergedJsonLists) {
+                            PathMatcher matcher = pair.a();
+                            @Nullable String orderBy = pair.b();
                             if (matcher.matches(new File(name).toPath())) {
                                 Map<Object, Object> existingMap;
                                 {
@@ -333,7 +341,7 @@ public interface ResourcePackLoader {
                                     }.getType());
                                 }
 
-                                Map<Object, Object> mergedMap = mergeMaps(existingMap, replacementMap);
+                                Map<Object, Object> mergedMap = mergeMaps(orderBy, existingMap, replacementMap);
 
                                 output.put(name, (OutputStream out) -> {
                                     try {
@@ -353,9 +361,8 @@ public interface ResourcePackLoader {
             return output;
         }
 
-
         @SuppressWarnings("unchecked")
-        private static Map<Object, Object> mergeMaps(Map<Object, Object> existing, Map<Object, Object> replacement) {
+        private static Map<Object, Object> mergeMaps(@Nullable String orderBy, Map<Object, Object> existing, Map<Object, Object> replacement) {
             for (Map.Entry<Object, Object> entry : replacement.entrySet()) {
                 Object key = entry.getKey();
                 Object value = entry.getValue();
@@ -364,10 +371,25 @@ public interface ResourcePackLoader {
                     Object existingValue = existing.get(key);
 
                     if (existingValue instanceof Map && value instanceof Map) {
-                        existing.put(key, mergeMaps((Map<Object, Object>) existingValue, (Map<Object, Object>) value));
+                        existing.put(key, mergeMaps(orderBy, (Map<Object, Object>) existingValue, (Map<Object, Object>) value));
                     } else if (existingValue instanceof List && value instanceof List) {
                         List<Object> mergedList = new ArrayList<>((List<Object>) existingValue);
                         mergedList.addAll((List<Object>) value);
+
+                        if (orderBy != null) {
+                            mergedList.sort((a, b) -> {
+                                try {
+                                    Map<String, Object> aMap = Objects.requireNonNull((Map<String, Object>) a);
+                                    Map<String, Object> bMap = Objects.requireNonNull((Map<String, Object>) b);
+
+                                    Number aValue = Objects.requireNonNull((Number) getNestedValue(aMap, orderBy));
+                                    Number bValue = Objects.requireNonNull((Number) getNestedValue(bMap, orderBy));
+                                    return Integer.compare(aValue.intValue(), bValue.intValue());
+                                } catch (Exception ignored) {
+                                }
+                                return 0;
+                            });
+                        }
                         existing.put(key, mergedList);
                     } else {
                         existing.put(key, value);
@@ -377,6 +399,24 @@ public interface ResourcePackLoader {
                 }
             }
             return existing;
+        }
+
+        @SuppressWarnings("unchecked")
+        public static @Nullable Object getNestedValue(Map<String, Object> map, String keyPath) {
+            if (keyPath == null || keyPath.isEmpty()) {
+                return null;
+            }
+
+            String[] parts = keyPath.split("\\.", 2);
+            Object value = map.get(parts[0]);
+
+            if (parts.length == 1) {
+                return value;
+            }
+            if (value instanceof Map) {
+                return getNestedValue((Map<String, Object>) value, parts[1]);
+            }
+            return null;
         }
     }
 }
