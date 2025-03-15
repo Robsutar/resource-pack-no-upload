@@ -2,7 +2,6 @@ package com.robsutar.rnu;
 
 import com.robsutar.rnu.fabric.FabricListener;
 import com.robsutar.rnu.fabric.RNUPackLoadedCallback;
-import com.robsutar.rnu.fabric.SimpleScheduler;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
@@ -30,7 +29,7 @@ public class ResourcePackNoUpload implements IResourcePackNoUploadInternal {
     public ResourcePackNoUpload(MinecraftServer server, Logger logger) {
         this.server = server;
         this.logger = logger;
-        scheduler = new SimpleScheduler(server);
+        scheduler = new SimpleScheduler();
     }
 
     public void onEnable() {

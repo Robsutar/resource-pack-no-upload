@@ -1,30 +1,14 @@
-package com.robsutar.rnu.fabric;
-
-import net.minecraft.server.MinecraftServer;
+package com.robsutar.rnu;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.*;
 
 public class SimpleScheduler {
-    private final MinecraftServer server;
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     private final HashMap<Integer, Future<?>> pendingTasks = new HashMap<>();
     private int openPendingTaskId = 1;
     private boolean closed = false;
-
-    public SimpleScheduler(MinecraftServer server) {
-        this.server = server;
-    }
-
-    public void runSync(Runnable runnable) {
-        if (closed)
-            throw new IllegalStateException("Attempt to schedule an sync task with the closed scheduler");
-        server.execute(() -> {
-            if (closed) return;
-            runnable.run();
-        });
-    }
 
     public void runAsync(Runnable runnable) {
         if (closed)
@@ -38,25 +22,25 @@ public class SimpleScheduler {
         pendingTasks.put(id, taskHandle);
     }
 
-    public void repeat(Runnable runnable, int delay, int period) {
+    public void repeatAsync(Runnable runnable, int delay, int period) {
         if (closed)
             throw new IllegalStateException("Attempt to schedule an repeating task with the closed scheduler");
 
         int id = openPendingTaskId++;
         ScheduledFuture<?> taskHandle = scheduler.scheduleAtFixedRate(
-                () -> server.executeBlocking(runnable),
+                runnable,
                 delay * 50L, period * 50L, TimeUnit.MILLISECONDS
         );
         pendingTasks.put(id, taskHandle);
     }
 
-    public void runLater(Runnable runnable, int delay) {
+    public void runLaterAsync(Runnable runnable, int delay) {
         if (closed)
             throw new IllegalStateException("Attempt to schedule an later task with the closed scheduler");
 
         int id = openPendingTaskId++;
         ScheduledFuture<?> taskHandle = scheduler.schedule(
-                () -> server.executeBlocking(runnable),
+                runnable,
                 delay * 50L, TimeUnit.MILLISECONDS
         );
         pendingTasks.put(id, taskHandle);
