@@ -48,11 +48,6 @@ public class ResourcePackNoUpload implements IResourcePackNoUploadInternal {
     }
 
     @Override
-    public void runInMain(Runnable runnable) {
-        scheduler.runSync(runnable);
-    }
-
-    @Override
     public void runAsync(Runnable runnable) {
         scheduler.runAsync(runnable);
     }
