@@ -1,6 +1,7 @@
 package com.robsutar.rnu;
 
 import com.robsutar.rnu.bukkit.BukkitListener;
+import com.robsutar.rnu.bukkit.BukkitPlatformHandler;
 import com.robsutar.rnu.bukkit.RNUCommand;
 import com.robsutar.rnu.bukkit.RNUPackLoadedEvent;
 import com.robsutar.rnu.util.OC;
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
 
 public final class ResourcePackNoUpload extends JavaPlugin implements IResourcePackNoUploadInternal {
     private final Impl impl = new Impl(this);
+    private final BukkitPlatformHandler platformHandler = new BukkitPlatformHandler(this);
     private final BukkitListener listener = new BukkitListener(this);
 
     @Override
@@ -54,7 +56,7 @@ public final class ResourcePackNoUpload extends JavaPlugin implements IResourceP
     }
 
     public void runSync(Runnable runnable) {
-        Bukkit.getScheduler().runTask(this, runnable);
+        platformHandler.runSync(runnable);
     }
 
     private void loadAutoReloading() {
