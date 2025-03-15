@@ -2,7 +2,6 @@ package com.robsutar.rnu;
 
 import com.robsutar.rnu.fabric.FabricListener;
 import com.robsutar.rnu.fabric.RNUPackLoadedCallback;
-import com.robsutar.rnu.fabric.SimpleScheduler;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
@@ -22,7 +21,6 @@ import java.util.logging.Logger;
 public class ResourcePackNoUpload implements IResourcePackNoUploadInternal {
     private final MinecraftServer server;
     private final Logger logger;
-    private final SimpleScheduler scheduler;
 
     private final Impl impl = new Impl(this);
     private FabricListener listener;
@@ -30,7 +28,6 @@ public class ResourcePackNoUpload implements IResourcePackNoUploadInternal {
     public ResourcePackNoUpload(MinecraftServer server, Logger logger) {
         this.server = server;
         this.logger = logger;
-        scheduler = new SimpleScheduler(server);
     }
 
     public void onEnable() {
@@ -39,22 +36,11 @@ public class ResourcePackNoUpload implements IResourcePackNoUploadInternal {
 
     public void onDisable() {
         impl.onDisable();
-        scheduler.closeAndCancelPending();
     }
 
     @Override
     public void onInitialConfigLoaded() {
         listener = new FabricListener(this);
-    }
-
-    @Override
-    public void runInMain(Runnable runnable) {
-        scheduler.runSync(runnable);
-    }
-
-    @Override
-    public void runAsync(Runnable runnable) {
-        scheduler.runAsync(runnable);
     }
 
     @Override
@@ -137,10 +123,6 @@ public class ResourcePackNoUpload implements IResourcePackNoUploadInternal {
 
     public MinecraftServer getServer() {
         return server;
-    }
-
-    public SimpleScheduler getScheduler() {
-        return scheduler;
     }
 
     public Component text(String legacy) {

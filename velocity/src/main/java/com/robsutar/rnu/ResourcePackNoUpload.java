@@ -28,7 +28,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -73,16 +72,6 @@ public final class ResourcePackNoUpload implements IResourcePackNoUploadInternal
                 .build();
 
         server.getCommandManager().register(commandMeta, new RNUCommand(this));
-    }
-
-    @Override
-    public void runInMain(Runnable runnable) {
-        runAsync(runnable);
-    }
-
-    @Override
-    public void runAsync(Runnable runnable) {
-        server.getScheduler().buildTask(this, runnable).schedule();
     }
 
     @Override
@@ -193,19 +182,17 @@ public final class ResourcePackNoUpload implements IResourcePackNoUploadInternal
             getServer().getEventManager().register(
                     this,
                     invoker.eventClass(),
-                    (e) -> getServer().getScheduler().buildTask(
-                            this,
-                            () -> {
-                                Instant now = Instant.now();
-                                if (Duration.between(lastUsed.get(), now).compareTo(repeatCooldown) > 0 &&
-                                        !(resourcePackState() instanceof ResourcePackState.Loading)
-                                ) {
-                                    lastUsed.set(now);
-                                    getServer().getCommandManager().executeAsync(
-                                            getServer().getConsoleCommandSource(), "rnu reload"
-                                    );
-                                }
-                            }).delay(invoker.delay() * 50L, TimeUnit.MILLISECONDS).schedule()
+                    (e) -> scheduler().runLaterAsync(() -> {
+                        Instant now = Instant.now();
+                        if (Duration.between(lastUsed.get(), now).compareTo(repeatCooldown) > 0 &&
+                                !(resourcePackState() instanceof ResourcePackState.Loading)
+                        ) {
+                            lastUsed.set(now);
+                            getServer().getCommandManager().executeAsync(
+                                    getServer().getConsoleCommandSource(), "rnu reload"
+                            );
+                        }
+                    }, invoker.delay())
             );
         }
     }

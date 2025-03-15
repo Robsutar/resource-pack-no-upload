@@ -32,7 +32,7 @@ public class BukkitListener implements Listener {
     }
 
     public void register() {
-        Bukkit.getScheduler().runTaskTimer(rnu, this::checkPending, rnu.config().resendingDelay(), rnu.config().resendingDelay());
+        rnu.scheduler().repeatAsync(() -> rnu.runSync(this::checkPending), rnu.config().resendingDelay());
         Bukkit.getPluginManager().registerEvents(this, rnu);
     }
 
@@ -56,14 +56,13 @@ public class BukkitListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerJoin(PlayerJoinEvent event) {
-        Bukkit.getScheduler().runTaskLater(rnu, () -> {
+        rnu.scheduler().runLaterAsync(() -> rnu.runSync(() -> {
             Player player = event.getPlayer();
             if (!pending.containsKey(player) && rnu.resourcePackState() instanceof ResourcePackState.Loaded) {
                 ResourcePackState.Loaded loaded = (ResourcePackState.Loaded) rnu.resourcePackState();
                 addPending(player, loaded.resourcePackInfo());
             }
-        }, rnu.config().resendingDelay());
-
+        }), rnu.config().resendingDelay());
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -76,7 +75,7 @@ public class BukkitListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerResourcePackStatus(PlayerResourcePackStatusEvent event) {
         Player player = event.getPlayer();
-        if (pending.remove(player) != null) Bukkit.getScheduler().runTask(rnu, () -> {
+        if (pending.remove(player) != null) rnu.runSync(() -> {
             RNUConfig config = rnu.config();
             PlayerResourcePackStatusEvent.Status status = event.getStatus();
 

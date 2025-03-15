@@ -1,6 +1,7 @@
 package com.robsutar.rnu;
 
 import com.robsutar.rnu.bukkit.BukkitListener;
+import com.robsutar.rnu.bukkit.BukkitPlatformHandler;
 import com.robsutar.rnu.bukkit.RNUCommand;
 import com.robsutar.rnu.bukkit.RNUPackLoadedEvent;
 import com.robsutar.rnu.util.OC;
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
 
 public final class ResourcePackNoUpload extends JavaPlugin implements IResourcePackNoUploadInternal {
     private final Impl impl = new Impl(this);
+    private final BukkitPlatformHandler platformHandler = new BukkitPlatformHandler(this);
     private final BukkitListener listener = new BukkitListener(this);
 
     @Override
@@ -39,16 +41,6 @@ public final class ResourcePackNoUpload extends JavaPlugin implements IResourceP
     }
 
     @Override
-    public void runInMain(Runnable runnable) {
-        Bukkit.getScheduler().runTask(this, runnable);
-    }
-
-    @Override
-    public void runAsync(Runnable runnable) {
-        Bukkit.getScheduler().runTaskAsynchronously(this, runnable);
-    }
-
-    @Override
     public void onPackLoaded(ResourcePackInfo resourcePackInfo) {
         Bukkit.getPluginManager().callEvent(new RNUPackLoadedEvent(resourcePackInfo));
     }
@@ -61,6 +53,10 @@ public final class ResourcePackNoUpload extends JavaPlugin implements IResourceP
     @Override
     public Impl impl() {
         return impl;
+    }
+
+    public void runSync(Runnable runnable) {
+        platformHandler.runSync(runnable);
     }
 
     private void loadAutoReloading() {
@@ -78,16 +74,16 @@ public final class ResourcePackNoUpload extends JavaPlugin implements IResourceP
                     invoker.eventClass(),
                     listener,
                     EventPriority.HIGH,
-                    (l, b) -> Bukkit.getScheduler().runTaskLater(
-                            this, () -> {
+                    (l, b) -> scheduler().runLaterAsync(
+                            () -> {
                                 Instant now = Instant.now();
                                 if (Duration.between(lastUsed.get(), now).compareTo(repeatCooldown) > 0 &&
                                         !(resourcePackState() instanceof ResourcePackState.Loading)
                                 ) {
                                     lastUsed.set(now);
-                                    Bukkit.dispatchCommand(
+                                    runSync(() -> Bukkit.dispatchCommand(
                                             Bukkit.getConsoleSender(), "rnu reload"
-                                    );
+                                    ));
                                 }
                             },
                             invoker.delay()),
