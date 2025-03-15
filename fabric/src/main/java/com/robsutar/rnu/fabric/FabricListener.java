@@ -19,7 +19,7 @@ public class FabricListener {
     public FabricListener(ResourcePackNoUpload rnu) {
         this.rnu = rnu;
 
-        rnu.getScheduler().repeatAsync(
+        rnu.scheduler().repeatAsync(
                 () -> rnu.getServer().executeBlocking(this::checkPending),
                 rnu.config().resendingDelay(), rnu.config().resendingDelay()
         );
@@ -49,7 +49,7 @@ public class FabricListener {
     }
 
     public void onPlayerJoin(ServerPlayer player) {
-        rnu.getScheduler().runLaterAsync(() -> rnu.getServer().executeBlocking(() -> {
+        rnu.scheduler().runLaterAsync(() -> rnu.getServer().executeBlocking(() -> {
             if (!pending.containsKey(player) && rnu.resourcePackState() instanceof ResourcePackState.Loaded) {
                 ResourcePackState.Loaded loaded = (ResourcePackState.Loaded) rnu.resourcePackState();
                 addPending(player, loaded.resourcePackInfo());

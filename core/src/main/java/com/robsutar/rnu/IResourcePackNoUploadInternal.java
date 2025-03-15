@@ -31,12 +31,14 @@ public interface IResourcePackNoUploadInternal {
 
     void onInitialConfigLoaded();
 
-    void runAsync(Runnable runnable);
-
     void onPackLoaded(ResourcePackInfo resourcePackInfo);
 
     default TextureProviderBytes textureProviderBytes() {
         return impl().textureProviderBytes;
+    }
+
+    default SimpleScheduler scheduler() {
+        return impl().scheduler;
     }
 
     default RNUConfig config() {
@@ -75,6 +77,7 @@ public interface IResourcePackNoUploadInternal {
     class Impl {
         private static final Yaml YAML = new Yaml();
 
+        private final SimpleScheduler scheduler = new SimpleScheduler();
         private final IResourcePackNoUploadInternal rnu;
         private TextureProviderBytes textureProviderBytes;
         private RNUConfig config;
@@ -101,7 +104,7 @@ public interface IResourcePackNoUploadInternal {
 
             rnu.onInitialConfigLoaded();
 
-            rnu.runAsync(() -> {
+            scheduler.runAsync(() -> {
                 try {
                     textureProviderBytes.run(() -> {
                         resourcePackState = loaded;
@@ -115,6 +118,7 @@ public interface IResourcePackNoUploadInternal {
 
         public void onDisable() {
             textureProviderBytes.close();
+            scheduler.closeAndCancelPending();
         }
 
         public ResourcePackState.Loaded load() throws ResourcePackLoadException {

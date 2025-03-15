@@ -39,11 +39,6 @@ public final class ResourcePackNoUpload extends JavaPlugin implements IResourceP
     }
 
     @Override
-    public void runAsync(Runnable runnable) {
-        Bukkit.getScheduler().runTaskAsynchronously(this, runnable);
-    }
-
-    @Override
     public void onPackLoaded(ResourcePackInfo resourcePackInfo) {
         Bukkit.getPluginManager().callEvent(new RNUPackLoadedEvent(resourcePackInfo));
     }

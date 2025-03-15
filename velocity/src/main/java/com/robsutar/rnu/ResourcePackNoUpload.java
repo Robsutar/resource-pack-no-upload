@@ -76,11 +76,6 @@ public final class ResourcePackNoUpload implements IResourcePackNoUploadInternal
     }
 
     @Override
-    public void runAsync(Runnable runnable) {
-        server.getScheduler().buildTask(this, runnable).schedule();
-    }
-
-    @Override
     public void onPackLoaded(ResourcePackInfo resourcePackInfo) {
         server.getEventManager().fire(new RNUPackLoadedEvent(resourcePackInfo));
     }
