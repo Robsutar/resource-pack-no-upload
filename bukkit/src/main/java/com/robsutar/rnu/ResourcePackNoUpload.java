@@ -53,6 +53,10 @@ public final class ResourcePackNoUpload extends JavaPlugin implements IResourceP
         return impl;
     }
 
+    public void runSync(Runnable runnable) {
+        Bukkit.getScheduler().runTask(this, runnable);
+    }
+
     private void loadAutoReloading() {
         Map<String, List<Map<String, Object>>> config = loadOrCreateConfig("autoReloading.yml");
         List<Map<String, Object>> invokersRaw = OC.list(config.get("invokers"));
@@ -68,16 +72,16 @@ public final class ResourcePackNoUpload extends JavaPlugin implements IResourceP
                     invoker.eventClass(),
                     listener,
                     EventPriority.HIGH,
-                    (l, b) -> Bukkit.getScheduler().runTaskLater(
-                            this, () -> {
+                    (l, b) -> scheduler().runLaterAsync(
+                            () -> {
                                 Instant now = Instant.now();
                                 if (Duration.between(lastUsed.get(), now).compareTo(repeatCooldown) > 0 &&
                                         !(resourcePackState() instanceof ResourcePackState.Loading)
                                 ) {
                                     lastUsed.set(now);
-                                    Bukkit.dispatchCommand(
+                                    runSync(() -> Bukkit.dispatchCommand(
                                             Bukkit.getConsoleSender(), "rnu reload"
-                                    );
+                                    ));
                                 }
                             },
                             invoker.delay()),

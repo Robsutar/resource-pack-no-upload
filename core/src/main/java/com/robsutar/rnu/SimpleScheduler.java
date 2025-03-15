@@ -22,6 +22,10 @@ public class SimpleScheduler {
         pendingTasks.put(id, taskHandle);
     }
 
+    public void repeatAsync(Runnable runnable, int delay) {
+        repeatAsync(runnable, delay, delay);
+    }
+
     public void repeatAsync(Runnable runnable, int delay, int period) {
         if (closed)
             throw new IllegalStateException("Attempt to schedule an repeating task with the closed scheduler");

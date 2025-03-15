@@ -12,7 +12,6 @@ import com.velocitypowered.api.proxy.Player;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 public class VelocityListener {
     private final ResourcePackNoUpload rnu;
@@ -24,9 +23,7 @@ public class VelocityListener {
     }
 
     public void register() {
-        rnu.getServer().getScheduler().buildTask(rnu, this::checkPending)
-                .repeat(rnu.config().resendingDelay() * 50L, TimeUnit.MILLISECONDS)
-                .schedule();
+        rnu.scheduler().repeatAsync(this::checkPending, rnu.config().resendingDelay());
         rnu.getServer().getEventManager().register(rnu, this);
     }
 
@@ -55,17 +52,16 @@ public class VelocityListener {
         );
     }
 
-    @SuppressWarnings("UnstableApiUsage")
     @Subscribe
     public void onPlayerJoin(ServerPostConnectEvent event) {
         if (event.getPreviousServer() == null) {
-            rnu.getServer().getScheduler().buildTask(rnu, () -> {
+            rnu.scheduler().runLaterAsync(() -> {
                 Player player = event.getPlayer();
                 if (!pending.containsKey(player) && rnu.resourcePackState() instanceof ResourcePackState.Loaded) {
                     ResourcePackState.Loaded loaded = (ResourcePackState.Loaded) rnu.resourcePackState();
                     addPending(player, loaded.resourcePackInfo());
                 }
-            }).delay(rnu.config().sendingDelay() * 50L, TimeUnit.MILLISECONDS).schedule();
+            }, rnu.config().sendingDelay());
         }
     }
 
