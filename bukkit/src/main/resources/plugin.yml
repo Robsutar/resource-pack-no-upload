@@ -9,6 +9,8 @@ authors: [ Robsutar ]
 # LP is still compatible with pre-1.13 releases.
 api-version: 1.13
 
+folia-supported: true
+
 commands:
   resourcepacknoupload:
     usage: "rnu reload"
