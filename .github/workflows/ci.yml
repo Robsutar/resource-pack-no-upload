@@ -181,6 +181,8 @@ jobs:
           loaders: |
             bukkit
             paper
+            purpur
+            folia
             spigot
           game-versions: |
             >=1.8.8 <=1.21.4
