@@ -49,7 +49,7 @@ loader:
 **Available types:**
 
 <details>
-  <summary><strong>Manual</strong> simple loading from folder</summary>
+  <summary><strong>Manual</strong> <i>simple loading from folder</i></summary>
   Uses an existing folder of any provided path.
 
 ```yaml
@@ -65,7 +65,7 @@ loader:
 </details>
 
 <details>
-  <summary><strong>Download</strong> downloads from web, with http headers</summary>
+  <summary><strong>Download</strong> <i>downloads from web, with http headers</i></summary>
   Downloads the resource pack from a link.
   At first, it would be somewhat against the RNU purpose, but this loader also
   supports http headers for the download request, allowing you to download the
@@ -87,7 +87,7 @@ loader:
 </details>
 
 <details>
-  <summary><strong>WithMovedFiles</strong> modify the files from another loader</summary>
+  <summary><strong>WithMovedFiles</strong> <i>modify the files from another loader</i></summary>
   Move loader provided resource pack files from a directory, to another.
 
 ```yaml
@@ -120,7 +120,7 @@ loader:
 </details>
 
 <details>
-  <summary><strong>WithDeletedFiles</strong> modify the files from another loader</summary>
+  <summary><strong>WithDeletedFiles</strong> <i>modify the files from another loader</i></summary>
   Ignore the files of the loader if they match with a provided path.
 
 ```yaml
@@ -143,7 +143,7 @@ loader:
 </details>
 
 <details>
-  <summary><strong>Merged</strong> loads and merges resource packs from a list of loaders</summary>
+  <summary><strong>Merged</strong> <i>loads and merges resource packs from a list of loaders</i></summary>
   Combines multiple loaders, prioritizing the first ones in the list.
 
 ```yaml
