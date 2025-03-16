@@ -172,21 +172,17 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Bukkit Modrinth publishing
+      - name: Fabric Modrinth publishing
         uses: Kir-Antipov/mc-publish@v3.3
         with:
           modrinth-id: mdL6k2hy
           modrinth-token: ${{ secrets.MODRINTH_CI_VERSIONING_TOKEN }}
-          files: "bukkit/build/libs/publish/*.jar"
+          files: "fabric/build/libs/publish/*.jar"
           loaders: |
-            bukkit
-            paper
-            purpur
-            folia
-            spigot
+            fabric
           game-versions: |
-            >=1.8.8 <=1.21.4
-          name: ResourcePackNoUpload Bukkit ${{ steps.next_version.outputs.NEXT_VERSION }}
+            >=1.19 <=1.20.1
+          name: ResourcePackNoUpload Fabric ${{ steps.next_version.outputs.NEXT_VERSION }}
           version: ${{ steps.next_version.outputs.NEXT_VERSION }}
           version-type: release
           changelog: ${{ steps.get-tag-message.outputs.body }}
@@ -206,17 +202,21 @@ jobs:
           version-type: release
           changelog: ${{ steps.get-tag-message.outputs.body }}
 
-      - name: Fabric Modrinth publishing
+      - name: Bukkit Modrinth publishing
         uses: Kir-Antipov/mc-publish@v3.3
         with:
           modrinth-id: mdL6k2hy
           modrinth-token: ${{ secrets.MODRINTH_CI_VERSIONING_TOKEN }}
-          files: "fabric/build/libs/publish/*.jar"
+          files: "bukkit/build/libs/publish/*.jar"
           loaders: |
-            fabric
+            bukkit
+            paper
+            purpur
+            folia
+            spigot
           game-versions: |
-            >=1.19 <=1.20.1
-          name: ResourcePackNoUpload Fabric ${{ steps.next_version.outputs.NEXT_VERSION }}
+            >=1.8.8 <=1.21.4
+          name: ResourcePackNoUpload Bukkit ${{ steps.next_version.outputs.NEXT_VERSION }}
           version: ${{ steps.next_version.outputs.NEXT_VERSION }}
           version-type: release
           changelog: ${{ steps.get-tag-message.outputs.body }}
