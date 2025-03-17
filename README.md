@@ -98,7 +98,7 @@ loader:
   headers:
     - key: "Authorization"
       value: "Bearer drive_api3213xih32i9DASKxE83hd9203f1930c0ll-d1v3-t0k3n2389"
-  ```
+```
 
 </details>
 
@@ -131,7 +131,7 @@ loader:
         value: "Bearer github_pat_uS78ih32i9DASKxE83hd9203f1930c0ll-g1t-t0k3n2389"
       - key: "Accept"
         value: "application/vnd.github.v3+json"
-  ```
+```
 
 </details>
 
@@ -154,7 +154,7 @@ loader:
   loader:
     type: ReadFolder
     folder: "rnu resource pack/Cool Folder/"
-  ```
+```
 
 </details>
 
@@ -182,7 +182,7 @@ loader:
       folder: "rnu resource pack/Cool Folder/"
     - type: ReadZip
       zip: "plugins/ModelEngine/resource pack.zip"
-  ```
+```
 
 </details>
 
