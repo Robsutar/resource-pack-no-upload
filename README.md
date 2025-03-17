@@ -190,7 +190,9 @@ loader:
 
 It is possible to make the RNU (**only the plugin**) reload automatically on event call.
 
-The auto reloading config: `plugins/ResourcePackNoUpload/autoReloading.yml`
+<details>
+  <summary><strong>How to configure it</strong></summary>
+  The auto reloading config: `plugins/ResourcePackNoUpload/autoReloading.yml`
 
 ```yaml
 invokers:
@@ -207,6 +209,8 @@ invokers:
     # cooldown will make the reload be executed only once.
     repeatCooldown: 10 # Default is 0.
 ```
+
+</details>
 
 ## Additional Configurations
 
