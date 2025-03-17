@@ -49,11 +49,11 @@ loader:
 **Available types:**
 
 <details>
-  <summary><strong>Manual</strong> <i>simple loading from folder</i></summary>
+  <summary><strong>ReadFolder</strong> <i>simple loading from folder</i></summary>
   Uses an existing folder of any provided path.
 
 ```yaml
-  type: Manual
+  type: ReadFolder
 
   # Relative to the server root folder.
   # Is inside `Cool Folder` (for this example) the resource pack files should be.
@@ -134,9 +134,9 @@ loader:
   # To ignore a file a file:
   # toDelete: "assets/minecraft/i_will_be_deleted.txt"
 
-  # This can be any loader, For this loader example we are using simple Manual loader.
+  # This can be any loader, For this loader example we are using simple ReadFolder loader.
   loader:
-    type: Manual
+    type: ReadFolder
     folder: "rnu resource pack/Cool Folder/"
   ```
 
@@ -162,9 +162,9 @@ loader:
   # For overriding cases, loaders on the top of the list have major priority, this is,
   # their files will replace the other files.
   loaders:
-    - type: Manual
+    - type: ReadFolder
       folder: "rnu resource pack/Cool Folder/"
-    - type: Manual
+    - type: ReadFolder
       folder: "plugins/ModelEngine/resource pack/"
   ```
 

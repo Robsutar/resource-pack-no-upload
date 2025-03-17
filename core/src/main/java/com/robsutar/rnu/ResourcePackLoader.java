@@ -49,8 +49,8 @@ public interface ResourcePackLoader {
         if (raw.get("type") == null) throw new IllegalArgumentException("Missing loader type");
         String type = OC.str(raw.get("type"));
         switch (type) {
-            case "Manual":
-                return new Manual(raw);
+            case "ReadFolder":
+                return new ReadFolder(raw);
             case "Merged":
                 return new Merged(tempFolder, raw);
             case "Download":
@@ -65,10 +65,10 @@ public interface ResourcePackLoader {
         }
     }
 
-    class Manual implements ResourcePackLoader {
+    class ReadFolder implements ResourcePackLoader {
         private final File folder;
 
-        public Manual(Map<String, Object> raw) {
+        public ReadFolder(Map<String, Object> raw) {
             this.folder = new File(OC.str(raw.get("folder")));
         }
 
