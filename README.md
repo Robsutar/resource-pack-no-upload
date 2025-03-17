@@ -65,6 +65,22 @@ loader:
 </details>
 
 <details>
+  <summary><strong>ReadZip</strong> <i>simple loading from zipped resource pack</i></summary>
+  Uses an existing .zip of any provided path.
+
+```yaml
+  type: ReadZip
+
+  # Relative to the server root folder.
+  # Is inside `Cool Resource Pack.zip` (for this example) the resource pack files should be.
+  # Cool Resource Pack.zip/pack.mcmeta
+  # Cool Resource Pack.zip/assets/minecraft...
+  zip: "rnu resource pack/Cool Resource Pack.zip"
+```
+
+</details>
+
+<details>
   <summary><strong>Download</strong> <i>downloads from web, with http headers</i></summary>
   Downloads the resource pack from a link.
   At first, it would be somewhat against the RNU purpose, but this loader also
@@ -164,8 +180,8 @@ loader:
   loaders:
     - type: ReadFolder
       folder: "rnu resource pack/Cool Folder/"
-    - type: ReadFolder
-      folder: "plugins/ModelEngine/resource pack/"
+    - type: ReadZip
+      zip: "plugins/ModelEngine/resource pack.zip"
   ```
 
 </details>
