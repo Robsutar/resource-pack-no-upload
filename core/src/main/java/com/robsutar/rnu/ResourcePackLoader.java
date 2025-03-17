@@ -21,6 +21,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
@@ -51,6 +52,8 @@ public interface ResourcePackLoader {
         switch (type) {
             case "ReadFolder":
                 return new ReadFolder(raw);
+            case "ReadZip":
+                return new ReadZip(raw);
             case "Merged":
                 return new Merged(tempFolder, raw);
             case "Download":
@@ -103,6 +106,51 @@ public interface ResourcePackLoader {
                     }
                 }
             }
+        }
+    }
+
+    class ReadZip implements ResourcePackLoader {
+        private final File zip;
+
+        public ReadZip(Map<String, Object> raw) {
+            this.zip = new File(OC.str(raw.get("zip")));
+        }
+
+        @Override
+        public Map<String, Consumer<OutputStream>> appendFiles() throws Exception {
+            if (!zip.exists()) throw new Exception("Zip file does not exist: " + zip);
+            if (!zip.isFile()) throw new Exception("Zip is not a file: " + zip);
+
+            HashMap<String, Consumer<OutputStream>> output = new HashMap<>();
+
+            try (ZipFile zf = new ZipFile(zip)) {
+                Enumeration<? extends ZipEntry> entries = zf.entries();
+                while (entries.hasMoreElements()) {
+                    ZipEntry entry = entries.nextElement();
+                    if (!entry.isDirectory()) {
+                        final String entryName = entry.getName();
+                        
+                        output.put(entryName, (out) -> {
+                            try (ZipFile innerZip = new ZipFile(zip)) {
+                                ZipEntry innerEntry = innerZip.getEntry(entryName);
+                                if (innerEntry == null) {
+                                    throw new RuntimeException("Entry not found: " + entryName);
+                                }
+                                try (InputStream in = innerZip.getInputStream(innerEntry)) {
+                                    byte[] buffer = new byte[1024];
+                                    int len;
+                                    while ((len = in.read(buffer)) > 0) {
+                                        out.write(buffer, 0, len);
+                                    }
+                                }
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
+                    }
+                }
+            }
+            return output;
         }
     }
 
@@ -171,15 +219,6 @@ public interface ResourcePackLoader {
                 throw new IllegalArgumentException("Failed to delete temporary zip file: " + zipPath);
 
             return output;
-        }
-
-        private static File newFile(File destinationDir, ZipEntry zipEntry) {
-            String entryName = zipEntry.getName();
-            String[] parts = entryName.split("/", 2);
-
-            String newEntryName = parts.length > 1 ? parts[1] : parts[0]; // Ignore root directory
-
-            return new File(destinationDir, newEntryName);
         }
 
         private static class Header {
