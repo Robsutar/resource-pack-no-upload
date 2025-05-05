@@ -1,9 +1,6 @@
 package com.robsutar.rnu.velocity;
 
-import com.robsutar.rnu.RNUConfig;
-import com.robsutar.rnu.ResourcePackInfo;
-import com.robsutar.rnu.ResourcePackNoUpload;
-import com.robsutar.rnu.ResourcePackState;
+import com.robsutar.rnu.*;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
@@ -23,21 +20,24 @@ public class VelocityListener {
     }
 
     public void register() {
-        rnu.scheduler().repeatAsync(this::checkPending, rnu.config().resendingDelay());
-        rnu.getServer().getEventManager().register(rnu, this);
-    }
+        if (rnu.serverConfig().sender() instanceof ResourcePackSender.Delayed) {
+            ResourcePackSender.Delayed delayed = (ResourcePackSender.Delayed) rnu.serverConfig().sender();
+            rnu.scheduler().repeatAsync(() -> {
+                if (rnu.resourcePackState() instanceof ResourcePackState.Loaded) {
+                    ResourcePackState.Loaded loaded = (ResourcePackState.Loaded) rnu.resourcePackState();
+                    long currentTime = System.currentTimeMillis();
 
-    private void checkPending() {
-        if (rnu.resourcePackState() instanceof ResourcePackState.Loaded) {
-            ResourcePackState.Loaded loaded = (ResourcePackState.Loaded) rnu.resourcePackState();
-            long currentTime = System.currentTimeMillis();
-
-            for (Map.Entry<Player, Long> entry : pending.entrySet()) {
-                if (currentTime - entry.getValue() > 1000) {
-                    addPending(entry.getKey(), loaded.resourcePackInfo());
+                    for (Map.Entry<Player, Long> entry : pending.entrySet()) {
+                        if (currentTime - entry.getValue() > 1000) {
+                            addPending(entry.getKey(), loaded.resourcePackInfo());
+                        }
+                    }
                 }
-            }
+            }, delayed.resendingDelay());
+        } else {
+            throw new RuntimeException("Loader not supported in this platform: " + rnu.serverConfig().sender().type());
         }
+        rnu.getServer().getEventManager().register(rnu, this);
     }
 
     private void addPending(Player player, ResourcePackInfo resourcePackInfo) {
@@ -55,13 +55,16 @@ public class VelocityListener {
     @Subscribe
     public void onPlayerJoin(ServerPostConnectEvent event) {
         if (event.getPreviousServer() == null) {
-            rnu.scheduler().runLaterAsync(() -> {
-                Player player = event.getPlayer();
-                if (!pending.containsKey(player) && rnu.resourcePackState() instanceof ResourcePackState.Loaded) {
-                    ResourcePackState.Loaded loaded = (ResourcePackState.Loaded) rnu.resourcePackState();
-                    addPending(player, loaded.resourcePackInfo());
-                }
-            }, rnu.config().sendingDelay());
+            if (rnu.serverConfig().sender() instanceof ResourcePackSender.Delayed) {
+                ResourcePackSender.Delayed delayed = (ResourcePackSender.Delayed) rnu.serverConfig().sender();
+                rnu.scheduler().runLaterAsync(() -> {
+                    Player player = event.getPlayer();
+                    if (!pending.containsKey(player) && rnu.resourcePackState() instanceof ResourcePackState.Loaded) {
+                        ResourcePackState.Loaded loaded = (ResourcePackState.Loaded) rnu.resourcePackState();
+                        addPending(player, loaded.resourcePackInfo());
+                    }
+                }, delayed.sendingDelay());
+            }
         }
     }
 

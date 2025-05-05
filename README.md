@@ -30,6 +30,12 @@ port: 25008 # Chose an open server port for the players.
 # For the most common cases, this field does not need to be set, but for Pterodactyl-based
 # servers this field is mandatory.
 publicLinkRoot:
+
+# The approach of sending the resource pack for the players.
+sender:
+  type: # Here is your sender type.
+  # Additional sender fields, each type has their own fields.
+  # See the end of this document for more information.
 ```
 
 ### Creating resource pack loader
@@ -208,6 +214,23 @@ invokers:
     # `ModelRegistrationEvent` event is called a few times in `/meg reload`, this
     # cooldown will make the reload be executed only once.
     repeatCooldown: 10 # Default is 0.
+```
+
+</details>
+
+## Different sender
+
+By default, the `Delayed` sender is used, and it works for most cases.
+
+<details>
+  <summary><strong>Using the injector on the PaperMC server</strong></summary>
+  The server config: `plugins/ResourcePackNoUpload/server.yml`
+
+```yaml
+sender:
+  # This sender will override in runtime the server resource pack properties, 
+  # leaving the pack sending handling for the PaperMC.
+  type: PaperPropertyInjector
 ```
 
 </details>

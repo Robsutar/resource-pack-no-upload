@@ -41,6 +41,10 @@ public interface IResourcePackNoUploadInternal {
         return impl().scheduler;
     }
 
+    default RNUServerConfig serverConfig() {
+        return impl().serverConfig;
+    }
+
     default RNUConfig config() {
         return impl().config;
     }
@@ -51,6 +55,13 @@ public interface IResourcePackNoUploadInternal {
 
     default ResourcePackState.Loaded load() throws ResourcePackLoadException {
         return impl().load();
+    }
+
+    default void allowSender(ResourcePackSender sender) throws ResourcePackLoadException {
+        if (!sender.type().equals(ResourcePackSender.Delayed.TYPE)) throw new ResourcePackLoadException(
+                "Resource pack sender not supported: `" + sender.type() +
+                        "`. only " + ResourcePackSender.Delayed.TYPE + " are supported in this platform"
+        );
     }
 
     default <K, V> Map<K, V> loadOrCreateConfig(String fileName) throws IllegalStateException {
@@ -80,6 +91,7 @@ public interface IResourcePackNoUploadInternal {
         private final SimpleScheduler scheduler = new SimpleScheduler();
         private final IResourcePackNoUploadInternal rnu;
         private TextureProviderBytes textureProviderBytes;
+        private RNUServerConfig serverConfig;
         private RNUConfig config;
         private ResourcePackState resourcePackState;
 
@@ -88,11 +100,12 @@ public interface IResourcePackNoUploadInternal {
         }
 
         public void onEnable() {
-            textureProviderBytes = TextureProviderBytes.deserialize(
-                    rnu,
+            serverConfig = RNUServerConfig.deserialize(
                     rnu.getServerIp(),
                     rnu.loadOrCreateConfig("server.yml")
             );
+
+            textureProviderBytes = TextureProviderBytes.deserialize(rnu);
 
             ResourcePackState.Loaded loaded;
             try {

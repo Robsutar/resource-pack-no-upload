@@ -13,14 +13,6 @@ kickOnRefuseMessage: >-
 kickOnFailMessage: >-
   §cFailed to download resource pack§r, error code: §6<error_code>§r.
 
-# Delay in ticks to send the resource pack for the player at their server join.
-sendingDelay: 10
-
-# Delay in ticks to resend the resource pack if had no response.
-# NOTE: for proxies, in older minecraft version, the resending is not that well performed, in those cases, a higher
-# sendingDelay is preferred.
-resendingDelay: 40
-
 # The texture pack loader, called every time that the resource pack is loaded by the plugin.
 # Each type has their own fields.
 # If any error occurs while running the loader, the resource pack sending will be disabled, waiting to another reload

@@ -1,19 +1,30 @@
 # The configuration of this file can not be reloaded at runtime.
 
 # ATTENTION REQUIRED
-# Choose a door that is open to players, otherwise they will get a
-# FAILED_DOWNLOAD error when trying to download the resource pack.
+# Choose a door that is open to players, otherwise they will get a FAILED_DOWNLOAD error when trying to download the
+# resource pack.
 port: 25008
 
-# Provide the root address that will be sent to players, usually
-# `http://` + server's public IP + `:` + port defined above.
+# Provide the root address that will be sent to players, usually `http://` + server's public IP + `:` + port defined
+# above.
 # Example:
 # publicLinkRoot: "http://192.0.2.1:25008"
 
-# This field is basically MANDATORY for applications running on
-# docker (any pterodactyl-based server), usually you can use the
-# server's IP, but with the port mentioned above.
+# This field is basically MANDATORY for applications running on docker (any pterodactyl-based server), usually you can
+# use the server's IP, but with the port mentioned above.
 
-# If this is field is blank, it will use defined ip in server
-# configuration, or the program ipv4.
+# If this is field is blank, it will use defined ip in server configuration, or the program ipv4.
 publicLinkRoot:
+
+# The approach of sending the resource pack for the players.
+sender:
+  # In this example, we are using the more common sender type, check all the loaders types here:
+  # # https://github.com/Robsutar/resource-pack-no-upload/?tab=readme-ov-file#different-sender
+  type: Delayed
+  # Delay in ticks to send the resource pack for the player at their server join.
+  sendingDelay: 1
+
+  # Delay in ticks to resend the resource pack if had no response.
+  # NOTE: for proxies, in older minecraft version, the resending is not that well performed, in those cases, a higher
+  # sendingDelay is preferred.
+  resendingDelay: 40

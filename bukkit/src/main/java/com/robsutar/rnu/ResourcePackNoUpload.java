@@ -55,6 +55,10 @@ public final class ResourcePackNoUpload extends JavaPlugin implements IResourceP
         return impl;
     }
 
+    public BukkitPlatformHandler platformHandler() {
+        return platformHandler;
+    }
+
     public void runSync(Runnable runnable) {
         platformHandler.runSync(runnable);
     }
