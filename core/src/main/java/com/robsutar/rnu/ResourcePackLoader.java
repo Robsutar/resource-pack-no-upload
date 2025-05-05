@@ -129,7 +129,7 @@ public interface ResourcePackLoader {
                     ZipEntry entry = entries.nextElement();
                     if (!entry.isDirectory()) {
                         final String entryName = entry.getName();
-                        
+
                         output.put(entryName, (out) -> {
                             try (ZipFile innerZip = new ZipFile(zip)) {
                                 ZipEntry innerEntry = innerZip.getEntry(entryName);
@@ -355,45 +355,48 @@ public interface ResourcePackLoader {
                     Consumer<OutputStream> replacement = entry.getValue();
                     @Nullable Consumer<OutputStream> existing = output.get(name);
 
-                    if (existing == null) {
-                        output.put(name, replacement);
-                    } else {
-                        for (Pair<PathMatcher, @Nullable String> pair : mergedJsonLists) {
-                            PathMatcher matcher = pair.a();
-                            @Nullable String orderBy = pair.b();
-                            if (matcher.matches(new File(name).toPath())) {
-                                Map<Object, Object> existingMap;
-                                {
-                                    ByteArrayOutputStream outRaw = new ByteArrayOutputStream();
-                                    existing.accept(outRaw);
-                                    String out = outRaw.toString(StandardCharsets.UTF_8.name());
-                                    existingMap = GSON.fromJson(out, new TypeToken<Map<Object, Object>>() {
-                                    }.getType());
-                                }
-
-                                Map<Object, Object> replacementMap;
-                                {
-                                    ByteArrayOutputStream outRaw = new ByteArrayOutputStream();
-                                    replacement.accept(outRaw);
-                                    String out = outRaw.toString(StandardCharsets.UTF_8.name());
-                                    replacementMap = GSON.fromJson(out, new TypeToken<Map<Object, Object>>() {
-                                    }.getType());
-                                }
-
-                                Map<Object, Object> mergedMap = mergeMaps(orderBy, existingMap, replacementMap);
-
-                                output.put(name, (OutputStream out) -> {
-                                    try {
-                                        Writer writer = new OutputStreamWriter(out, StandardCharsets.UTF_8);
-                                        GSON.toJson(mergedMap, writer);
-                                        writer.flush();
-                                    } catch (IOException e) {
-                                        throw new RuntimeException(e);
+                    l1:
+                    {
+                        if (existing != null) {
+                            for (Pair<PathMatcher, @Nullable String> pair : mergedJsonLists) {
+                                PathMatcher matcher = pair.a();
+                                @Nullable String orderBy = pair.b();
+                                if (matcher.matches(new File(name).toPath())) {
+                                    Map<Object, Object> existingMap;
+                                    {
+                                        ByteArrayOutputStream outRaw = new ByteArrayOutputStream();
+                                        existing.accept(outRaw);
+                                        String out = outRaw.toString(StandardCharsets.UTF_8.name());
+                                        existingMap = GSON.fromJson(out, new TypeToken<Map<Object, Object>>() {
+                                        }.getType());
                                     }
-                                });
-                                break;
+
+                                    Map<Object, Object> replacementMap;
+                                    {
+                                        ByteArrayOutputStream outRaw = new ByteArrayOutputStream();
+                                        replacement.accept(outRaw);
+                                        String out = outRaw.toString(StandardCharsets.UTF_8.name());
+                                        replacementMap = GSON.fromJson(out, new TypeToken<Map<Object, Object>>() {
+                                        }.getType());
+                                    }
+
+                                    Map<Object, Object> mergedMap = mergeMaps(orderBy, existingMap, replacementMap);
+
+                                    output.put(name, (OutputStream out) -> {
+                                        try {
+                                            Writer writer = new OutputStreamWriter(out, StandardCharsets.UTF_8);
+                                            GSON.toJson(mergedMap, writer);
+                                            writer.flush();
+                                        } catch (IOException e) {
+                                            throw new RuntimeException(e);
+                                        }
+                                    });
+                                    break l1;
+                                }
                             }
                         }
+
+                        output.put(name, replacement);
                     }
                 }
             }
