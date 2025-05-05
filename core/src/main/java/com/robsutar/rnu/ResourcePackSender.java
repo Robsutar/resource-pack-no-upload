@@ -13,6 +13,8 @@ public interface ResourcePackSender {
         switch (type) {
             case Delayed.TYPE:
                 return new Delayed(raw);
+            case PaperPropertyInjector.TYPE:
+                return new PaperPropertyInjector();
             default:
                 throw new IllegalArgumentException("Invalid loader type: " + type);
         }
@@ -40,6 +42,15 @@ public interface ResourcePackSender {
 
         public int resendingDelay() {
             return resendingDelay;
+        }
+    }
+
+    class PaperPropertyInjector implements ResourcePackSender {
+        public static final String TYPE = "PaperPropertyInjector";
+
+        @Override
+        public String type() {
+            return TYPE;
         }
     }
 }
