@@ -1,2 +1,3 @@
-# List of invokers that can execute the `/rnu reload` command.
+# List of invokers that can execute the `/rnu reload` command. See how to configure the invokers in
+# https://github.com/Robsutar/resource-pack-no-upload/?tab=readme-ov-file#auto-reloading
 invokers:
