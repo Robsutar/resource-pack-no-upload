@@ -1,6 +1,5 @@
 package com.robsutar.rnu;
 
-import com.robsutar.rnu.util.OC;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
@@ -9,13 +8,9 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.http.*;
 import io.netty.util.concurrent.Future;
-import org.jetbrains.annotations.Nullable;
 
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.URI;
-import java.net.UnknownHostException;
-import java.util.Map;
 
 public class TextureProviderBytes {
     private final IResourcePackNoUploadInternal rnu;
@@ -129,27 +124,7 @@ public class TextureProviderBytes {
         }
     }
 
-    public static TextureProviderBytes deserialize(IResourcePackNoUploadInternal rnu, @Nullable String serverIp, Map<String, Object> raw) {
-        if (raw.get("port") == null)
-            throw new IllegalArgumentException(
-                    "Port undefined in configuration!\n" +
-                            "Define it in ResourcePackNoUpload server.yml config\n" +
-                            "Make sure to open this port to the players.\n"
-            );
-        int port = OC.intValue(raw.get("port"));
-
-        String publicLinkRoot;
-        if (raw.get("publicLinkRoot") != null) publicLinkRoot = OC.str(raw.get("publicLinkRoot"));
-        else {
-            if (serverIp != null && !serverIp.isEmpty()) publicLinkRoot = serverIp;
-            else try {
-                publicLinkRoot = InetAddress.getLocalHost().getHostAddress();
-            } catch (UnknownHostException e) {
-                throw new IllegalArgumentException("Failed to get server address from program ipv4.");
-            }
-            publicLinkRoot = "http://" + publicLinkRoot + ":" + port;
-        }
-
-        return new TextureProviderBytes(rnu, publicLinkRoot, port);
+    public static TextureProviderBytes deserialize(IResourcePackNoUploadInternal rnu) {
+        return new TextureProviderBytes(rnu, rnu.serverConfig().publicLinkRoot(), rnu.serverConfig().port());
     }
 }

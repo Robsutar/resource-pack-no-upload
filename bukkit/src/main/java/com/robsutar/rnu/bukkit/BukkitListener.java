@@ -1,9 +1,6 @@
 package com.robsutar.rnu.bukkit;
 
-import com.robsutar.rnu.RNUConfig;
-import com.robsutar.rnu.ResourcePackInfo;
-import com.robsutar.rnu.ResourcePackNoUpload;
-import com.robsutar.rnu.ResourcePackState;
+import com.robsutar.rnu.*;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -22,8 +19,8 @@ import java.util.function.BiConsumer;
 
 public class BukkitListener implements Listener {
     private final ResourcePackNoUpload rnu;
-    private final BiConsumer<Player, ResourcePackInfo> setResourcePackFunction;
 
+    private final BiConsumer<Player, ResourcePackInfo> setResourcePackFunction;
     private final HashMap<Player, Long> pending = new HashMap<>();
 
     public BukkitListener(ResourcePackNoUpload rnu) {
@@ -32,21 +29,24 @@ public class BukkitListener implements Listener {
     }
 
     public void register() {
-        rnu.scheduler().repeatAsync(() -> rnu.runSync(this::checkPending), rnu.config().resendingDelay());
-        Bukkit.getPluginManager().registerEvents(this, rnu);
-    }
+        if (rnu.serverConfig().sender() instanceof ResourcePackSender.Delayed) {
+            ResourcePackSender.Delayed delayed = (ResourcePackSender.Delayed) rnu.serverConfig().sender();
+            rnu.scheduler().repeatAsync(() -> rnu.runSync(() -> {
+                if (rnu.resourcePackState() instanceof ResourcePackState.Loaded) {
+                    ResourcePackState.Loaded loaded = (ResourcePackState.Loaded) rnu.resourcePackState();
+                    long currentTime = System.currentTimeMillis();
 
-    private void checkPending() {
-        if (rnu.resourcePackState() instanceof ResourcePackState.Loaded) {
-            ResourcePackState.Loaded loaded = (ResourcePackState.Loaded) rnu.resourcePackState();
-            long currentTime = System.currentTimeMillis();
-
-            for (Map.Entry<Player, Long> entry : pending.entrySet()) {
-                if (currentTime - entry.getValue() > 1000) {
-                    addPending(entry.getKey(), loaded.resourcePackInfo());
+                    for (Map.Entry<Player, Long> entry : pending.entrySet()) {
+                        if (currentTime - entry.getValue() > 1000) {
+                            addPending(entry.getKey(), loaded.resourcePackInfo());
+                        }
+                    }
                 }
-            }
+            }), delayed.resendingDelay());
+        } else {
+            throw new RuntimeException("Loader not supported in this platform: " + rnu.serverConfig().sender().type());
         }
+        Bukkit.getPluginManager().registerEvents(this, rnu);
     }
 
     private void addPending(Player player, ResourcePackInfo resourcePackInfo) {
@@ -56,13 +56,16 @@ public class BukkitListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerJoin(PlayerJoinEvent event) {
-        rnu.scheduler().runLaterAsync(() -> rnu.runSync(() -> {
-            Player player = event.getPlayer();
-            if (!pending.containsKey(player) && rnu.resourcePackState() instanceof ResourcePackState.Loaded) {
-                ResourcePackState.Loaded loaded = (ResourcePackState.Loaded) rnu.resourcePackState();
-                addPending(player, loaded.resourcePackInfo());
-            }
-        }), rnu.config().resendingDelay());
+        if (rnu.serverConfig().sender() instanceof ResourcePackSender.Delayed) {
+            ResourcePackSender.Delayed delayed = (ResourcePackSender.Delayed) rnu.serverConfig().sender();
+            rnu.scheduler().runLaterAsync(() -> rnu.runSync(() -> {
+                Player player = event.getPlayer();
+                if (!pending.containsKey(player) && rnu.resourcePackState() instanceof ResourcePackState.Loaded) {
+                    ResourcePackState.Loaded loaded = (ResourcePackState.Loaded) rnu.resourcePackState();
+                    addPending(player, loaded.resourcePackInfo());
+                }
+            }), delayed.resendingDelay());
+        }
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -228,5 +231,4 @@ public class BukkitListener implements Listener {
     private void noHash() {
         rnu.getLogger().warning("Resource Pack `hash` is not supported in this bukkit platform/version.");
     }
-
 }

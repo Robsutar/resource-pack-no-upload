@@ -23,7 +23,7 @@ public class ResourcePackNoUpload implements IResourcePackNoUploadInternal {
     private final Logger logger;
 
     private final Impl impl = new Impl(this);
-    private FabricListener listener;
+    private final FabricListener listener = new FabricListener(this);
 
     public ResourcePackNoUpload(MinecraftServer server, Logger logger) {
         this.server = server;
@@ -40,7 +40,7 @@ public class ResourcePackNoUpload implements IResourcePackNoUploadInternal {
 
     @Override
     public void onInitialConfigLoaded() {
-        listener = new FabricListener(this);
+        listener.register();
     }
 
     @Override

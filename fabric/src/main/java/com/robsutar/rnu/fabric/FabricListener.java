@@ -1,9 +1,6 @@
 package com.robsutar.rnu.fabric;
 
-import com.robsutar.rnu.RNUConfig;
-import com.robsutar.rnu.ResourcePackInfo;
-import com.robsutar.rnu.ResourcePackNoUpload;
-import com.robsutar.rnu.ResourcePackState;
+import com.robsutar.rnu.*;
 import net.minecraft.network.protocol.game.ClientboundResourcePackPacket;
 import net.minecraft.network.protocol.game.ServerboundResourcePackPacket;
 import net.minecraft.server.level.ServerPlayer;
@@ -18,23 +15,25 @@ public class FabricListener {
 
     public FabricListener(ResourcePackNoUpload rnu) {
         this.rnu = rnu;
-
-        rnu.scheduler().repeatAsync(
-                () -> rnu.getServer().execute(this::checkPending),
-                rnu.config().resendingDelay(), rnu.config().resendingDelay()
-        );
     }
 
-    private void checkPending() {
-        if (rnu.resourcePackState() instanceof ResourcePackState.Loaded) {
-            ResourcePackState.Loaded loaded = (ResourcePackState.Loaded) rnu.resourcePackState();
-            long currentTime = System.currentTimeMillis();
+    public void register() {
+        if (rnu.serverConfig().sender() instanceof ResourcePackSender.Delayed) {
+            ResourcePackSender.Delayed delayed = (ResourcePackSender.Delayed) rnu.serverConfig().sender();
+            rnu.scheduler().repeatAsync(() -> rnu.getServer().execute(() -> {
+                if (rnu.resourcePackState() instanceof ResourcePackState.Loaded) {
+                    ResourcePackState.Loaded loaded = (ResourcePackState.Loaded) rnu.resourcePackState();
+                    long currentTime = System.currentTimeMillis();
 
-            for (Map.Entry<ServerPlayer, Long> entry : pending.entrySet()) {
-                if (currentTime - entry.getValue() > 1000) {
-                    addPending(entry.getKey(), loaded.resourcePackInfo());
+                    for (Map.Entry<ServerPlayer, Long> entry : pending.entrySet()) {
+                        if (currentTime - entry.getValue() > 1000) {
+                            addPending(entry.getKey(), loaded.resourcePackInfo());
+                        }
+                    }
                 }
-            }
+            }), delayed.resendingDelay());
+        } else {
+            throw new RuntimeException("Loader not supported in this platform: " + rnu.serverConfig().sender().type());
         }
     }
 
@@ -49,12 +48,15 @@ public class FabricListener {
     }
 
     public void onPlayerJoin(ServerPlayer player) {
-        rnu.scheduler().runLaterAsync(() -> rnu.getServer().execute(() -> {
-            if (!pending.containsKey(player) && rnu.resourcePackState() instanceof ResourcePackState.Loaded) {
-                ResourcePackState.Loaded loaded = (ResourcePackState.Loaded) rnu.resourcePackState();
-                addPending(player, loaded.resourcePackInfo());
-            }
-        }), rnu.config().sendingDelay());
+        if (rnu.serverConfig().sender() instanceof ResourcePackSender.Delayed) {
+            ResourcePackSender.Delayed delayed = (ResourcePackSender.Delayed) rnu.serverConfig().sender();
+            rnu.scheduler().runLaterAsync(() -> rnu.getServer().execute(() -> {
+                if (!pending.containsKey(player) && rnu.resourcePackState() instanceof ResourcePackState.Loaded) {
+                    ResourcePackState.Loaded loaded = (ResourcePackState.Loaded) rnu.resourcePackState();
+                    addPending(player, loaded.resourcePackInfo());
+                }
+            }), delayed.sendingDelay());
+        }
     }
 
     public void onPlayerQuit(ServerPlayer player) {
