@@ -196,7 +196,7 @@ jobs:
           loaders: |
             velocity
           game-versions: |
-            >=1.8.8 <=1.21.4
+            >=1.8.8 <=1.21.5
           name: ResourcePackNoUpload Velocity ${{ steps.next_version.outputs.NEXT_VERSION }}
           version: ${{ steps.next_version.outputs.NEXT_VERSION }}
           version-type: release
@@ -215,7 +215,7 @@ jobs:
             folia
             spigot
           game-versions: |
-            >=1.8.8 <=1.21.4
+            >=1.8.8 <=1.21.5
           name: ResourcePackNoUpload Bukkit ${{ steps.next_version.outputs.NEXT_VERSION }}
           version: ${{ steps.next_version.outputs.NEXT_VERSION }}
           version-type: release
