@@ -29,7 +29,7 @@ public class RNUCommand extends LiteralArgumentBuilder<CommandSourceStack> {
                     source.sendFailure(rnu.text("§c§lERROR!§r §4Failed to reload resource pack. Message: §f" + e.getMessage()));
                     source.sendFailure(rnu.text("§eSee console for more info."));
                     source.sendFailure(rnu.text("§eThe resource pack sending is disabled."));
-                    source.sendFailure(rnu.text("§e<italic>Once the problem is fixed, you can use `/rnu reload` again."));
+                    source.sendFailure(rnu.text("§e§oOnce the problem is fixed, you can use `/rnu reload` again."));
                 }
             }
             return Command.SINGLE_SUCCESS;

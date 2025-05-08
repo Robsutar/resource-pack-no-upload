@@ -55,7 +55,7 @@ public class RNUCommand implements SimpleCommand {
                 sender.sendMessage(rnu.text("§c§lERROR!§r §4Failed to reload resource pack. Message: §f" + e.getMessage()));
                 sender.sendMessage(rnu.text("§eSee console for more info."));
                 sender.sendMessage(rnu.text("§eThe resource pack sending is disabled."));
-                sender.sendMessage(rnu.text("§e<italic>Once the problem is fixed, you can use `/rnu reload` again."));
+                sender.sendMessage(rnu.text("§e§oOnce the problem is fixed, you can use `/rnu reload` again."));
             }
         }
     }

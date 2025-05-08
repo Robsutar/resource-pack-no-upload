@@ -45,7 +45,7 @@ public class RNUCommand implements CommandExecutor, TabCompleter {
                 sender.sendMessage("§c§lERROR!§r §4Failed to reload resource pack. Message: §f" + e.getMessage());
                 sender.sendMessage("§eSee console for more info.");
                 sender.sendMessage("§eThe resource pack sending is disabled.");
-                sender.sendMessage("§e<italic>Once the problem is fixed, you can use `/rnu reload` again.");
+                sender.sendMessage("§e§oOnce the problem is fixed, you can use `/rnu reload` again.");
             }
         }
 
