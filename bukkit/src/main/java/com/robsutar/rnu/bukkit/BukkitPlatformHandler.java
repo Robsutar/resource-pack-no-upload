@@ -2,6 +2,8 @@ package com.robsutar.rnu.bukkit;
 
 import com.robsutar.rnu.ResourcePackInfo;
 import com.robsutar.rnu.ResourcePackNoUpload;
+import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 
@@ -38,8 +40,12 @@ public class BukkitPlatformHandler {
         runSyncFunction.accept(runnable);
     }
 
-    public void injectPackInServer(ResourcePackInfo resourcePackInfo) {
+    public void injectPackInServer(ResourcePackInfo resourcePackInfo, boolean required) {
         try {
+            String asJson = GsonComponentSerializer.gson().serialize(
+                    LegacyComponentSerializer.legacySection().deserialize(resourcePackInfo.prompt())
+            );
+
             Object parent = Bukkit.getServer();
             Class<?> parentClass = parent.getClass();
             Field dedicatedServerField = parentClass.getDeclaredField("console");
@@ -68,8 +74,8 @@ public class BukkitPlatformHandler {
                     resourcePackInfo.uri(),
                     resourcePackInfo.hashStr(),
                     null,
-                    true,
-                    "{\"text\": \"Accept our server resource pack!\"}" // TODO:
+                    required,
+                    asJson
             );
 
             Field infoField = propertiesClass.getDeclaredField("serverResourcePackInfo");
