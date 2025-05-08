@@ -15,10 +15,14 @@ repositories {
 
 dependencies {
     implementation project(':core')
+
     compileOnly 'org.jetbrains:annotations:23.0.0'
+
     // Paper is used just as transcriber of the bukkit classes, Paper classes are not used.
     // Version 1.15.2 is used for the same reason, is just an transcriber, newer version classes are not used.
     compileOnly 'com.destroystokyo.paper:paper-api:1.15.2-R0.1-SNAPSHOT'
+    compileOnly "net.kyori:adventure-text-serializer-legacy:4.20.0"
+    compileOnly "net.kyori:adventure-text-serializer-gson:4.20.0"
 }
 
 processResources {
