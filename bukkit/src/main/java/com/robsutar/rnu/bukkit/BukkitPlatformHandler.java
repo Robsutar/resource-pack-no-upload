@@ -69,7 +69,7 @@ public class BukkitPlatformHandler {
                     resourcePackInfo.hashStr(),
                     null,
                     true,
-                    "{\"text\": \"hayaaaaaaan\"}" // TODO:
+                    "{\"text\": \"Accept our server resource pack!\"}" // TODO:
             );
 
             Field infoField = propertiesClass.getDeclaredField("serverResourcePackInfo");
