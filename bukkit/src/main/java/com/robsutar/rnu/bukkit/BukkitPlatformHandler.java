@@ -38,7 +38,7 @@ public class BukkitPlatformHandler {
         runSyncFunction.accept(runnable);
     }
 
-    public void injectPackInServer(ResourcePackInfo resourcePackInfo) {
+    public void injectPackInServer(ResourcePackInfo resourcePackInfo, boolean optional) {
         try {
             Object parent = Bukkit.getServer();
             Class<?> parentClass = parent.getClass();
@@ -68,7 +68,7 @@ public class BukkitPlatformHandler {
                     resourcePackInfo.uri(),
                     resourcePackInfo.hashStr(),
                     null,
-                    true,
+                    optional,
                     "{\"text\": \"Accept our server resource pack!\"}" // TODO:
             );
 

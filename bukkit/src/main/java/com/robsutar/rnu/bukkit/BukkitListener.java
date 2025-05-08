@@ -45,7 +45,7 @@ public class BukkitListener implements Listener {
             }), delayed.resendingDelay());
         } else if (rnu.serverConfig().sender() instanceof ResourcePackSender.PaperPropertyInjector) {
             ResourcePackState.LoadedPendingProvider loaded = (ResourcePackState.LoadedPendingProvider) rnu.resourcePackState();
-            rnu.platformHandler().injectPackInServer(loaded.loaded().resourcePackInfo());
+            rnu.platformHandler().injectPackInServer(loaded.loaded().resourcePackInfo(), rnu.config().kickOnFailMessage() == null);
         } else {
             throw new RuntimeException("Loader not supported in this platform: " + rnu.serverConfig().sender().type());
         }
@@ -119,7 +119,7 @@ public class BukkitListener implements Listener {
     @EventHandler
     public void onRNUPackLoaded(RNUPackLoadedEvent event) {
         if (rnu.serverConfig().sender() instanceof ResourcePackSender.PaperPropertyInjector) {
-            rnu.platformHandler().injectPackInServer(event.getResourcePackInfo());
+            rnu.platformHandler().injectPackInServer(event.getResourcePackInfo(), rnu.config().kickOnFailMessage() == null);
         }
 
         ResourcePackInfo resourcePackInfo = event.getResourcePackInfo();
