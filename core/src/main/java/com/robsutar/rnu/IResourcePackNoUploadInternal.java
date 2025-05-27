@@ -57,13 +57,6 @@ public interface IResourcePackNoUploadInternal {
         return impl().load();
     }
 
-    default void allowSender(ResourcePackSender sender) throws ResourcePackLoadException {
-        if (!sender.type().equals(ResourcePackSender.Delayed.TYPE)) throw new ResourcePackLoadException(
-                "Resource pack sender not supported: `" + sender.type() +
-                        "`. only " + ResourcePackSender.Delayed.TYPE + " are supported in this platform"
-        );
-    }
-
     default <K, V> Map<K, V> loadOrCreateConfig(String fileName) throws IllegalStateException {
         IResourcePackNoUploadInternal rnu = impl().rnu;
         File folder = rnu.getDataFolder();
@@ -185,11 +178,19 @@ public interface IResourcePackNoUploadInternal {
                     throw new ResourcePackLoadException("Failed to load SHA-1 algorithm to create texture hash.");
                 }
 
+                @Nullable String route;
+                if (rnu.serverConfig().sender() instanceof ResourcePackSender.NoSenderFixedLink) {
+                    route = ((ResourcePackSender.NoSenderFixedLink) rnu.serverConfig().sender()).route();
+                } else {
+                    route = null;
+                }
+
                 ResourcePackInfo resourcePackInfo = new ResourcePackInfo(
                         UUID.randomUUID(),
                         hash,
                         config.prompt(),
-                        textureProviderBytes.uri()
+                        textureProviderBytes.uri(),
+                        route
                 );
 
                 ResourcePackState.Loaded newState = new ResourcePackState.Loaded(resourcePackInfo, bytes);
