@@ -15,6 +15,8 @@ public interface ResourcePackSender {
                 return new Delayed(raw);
             case PaperPropertyInjector.TYPE:
                 return new PaperPropertyInjector();
+            case NoSenderFixedLink.TYPE:
+                return new NoSenderFixedLink(raw);
             default:
                 throw new IllegalArgumentException("Invalid loader type: " + type);
         }
@@ -51,6 +53,25 @@ public interface ResourcePackSender {
         @Override
         public String type() {
             return TYPE;
+        }
+    }
+
+    class NoSenderFixedLink implements ResourcePackSender {
+        public static final String TYPE = "NoSenderFixedLink";
+
+        private final String route;
+
+        public NoSenderFixedLink(Map<String, Object> raw) {
+            this.route = OC.str(raw.get("route"));
+        }
+
+        @Override
+        public String type() {
+            return TYPE;
+        }
+
+        public String route() {
+            return route;
         }
     }
 }
