@@ -43,6 +43,9 @@ public class BukkitListener implements Listener {
                     }
                 }
             }), delayed.resendingDelay());
+        } else if (rnu.serverConfig().sender() instanceof ResourcePackSender.NoSenderFixedLink) {
+            rnu.getLogger().info("No automatic resource pack sending enabled (NoSenderFixedLink).");
+            rnu.getLogger().info("Make sure you are sending the resource link for the players by another way.");
         } else if (rnu.serverConfig().sender() instanceof ResourcePackSender.PaperPropertyInjector) {
             ResourcePackState.LoadedPendingProvider loaded = (ResourcePackState.LoadedPendingProvider) rnu.resourcePackState();
             rnu.platformHandler().injectPackInServer(loaded.loaded().resourcePackInfo(), rnu.config().kickOnFailMessage() != null);
@@ -120,6 +123,8 @@ public class BukkitListener implements Listener {
     public void onRNUPackLoaded(RNUPackLoadedEvent event) {
         if (rnu.serverConfig().sender() instanceof ResourcePackSender.PaperPropertyInjector) {
             rnu.platformHandler().injectPackInServer(event.getResourcePackInfo(), rnu.config().kickOnFailMessage() != null);
+        } else if (rnu.serverConfig().sender() instanceof ResourcePackSender.NoSenderFixedLink) {
+            return;
         }
 
         ResourcePackInfo resourcePackInfo = event.getResourcePackInfo();
