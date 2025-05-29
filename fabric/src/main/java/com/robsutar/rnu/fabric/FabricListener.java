@@ -32,6 +32,10 @@ public class FabricListener {
                     }
                 }
             }), delayed.resendingDelay());
+        }
+        if (rnu.serverConfig().sender() instanceof ResourcePackSender.NoSenderFixedLink) {
+            rnu.getLogger().info("No automatic resource pack sending enabled (NoSenderFixedLink).");
+            rnu.getLogger().info("Make sure you are sending the resource link for the players by another way.");
         } else {
             throw new RuntimeException("Loader not supported in this platform: " + rnu.serverConfig().sender().type());
         }
@@ -99,6 +103,10 @@ public class FabricListener {
     }
 
     public void onRNUPackLoaded(ResourcePackInfo resourcePackInfo) {
+        if (rnu.serverConfig().sender() instanceof ResourcePackSender.NoSenderFixedLink) {
+            return;
+        }
+
         for (ServerPlayer player : rnu.getServer().getPlayerList().getPlayers()) {
             addPending(player, resourcePackInfo);
         }

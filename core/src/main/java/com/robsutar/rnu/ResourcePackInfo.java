@@ -1,5 +1,7 @@
 package com.robsutar.rnu;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.net.URI;
 import java.util.UUID;
 
@@ -10,7 +12,7 @@ public final class ResourcePackInfo {
     private final String hashStr;
     private final String uri;
 
-    public ResourcePackInfo(UUID id, byte[] hash, String prompt, URI uriRoot) {
+    public ResourcePackInfo(UUID id, byte[] hash, String prompt, URI uriRoot, @Nullable String route) {
         this.id = id;
         this.hash = hash;
         this.prompt = prompt;
@@ -22,7 +24,7 @@ public final class ResourcePackInfo {
 
         hashStr = hexString.toString();
 
-        this.uri = uriRoot + "/" + hashStr + ".zip";
+        this.uri = uriRoot + "/" + (route == null ? hashStr : route) + ".zip";
     }
 
     public UUID id() {
