@@ -235,6 +235,24 @@ sender:
 
 </details>
 
+<details>
+  <summary><strong>No automatic url sending, and fixed link server</strong></summary>
+  The server config: `plugins/ResourcePackNoUpload/server.yml`
+
+```yaml
+sender:
+  # This sender will not send the resource pack url to the players automatically,
+  # and will have a fixed link.
+  # Useful if you want to send the resource pack through the vanilla behavior,
+  # setting the resource-pack server.properties to this link for example.
+  type: NoSenderFixedLink
+  # With the "pack" route, the link would be something like: "http://192.0.2.1:25008/pack.zip"
+  # But with the ip and port defined in the config `publicLinkRoot`
+  route: "pack"
+```
+
+</details>
+
 ## Additional Configurations
 
 There are other settings inside config.yml, such as messages and RNU behavior, refer to the automatically generated
