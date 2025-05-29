@@ -34,6 +34,9 @@ public class VelocityListener {
                     }
                 }
             }, delayed.resendingDelay());
+        } else if (rnu.serverConfig().sender() instanceof ResourcePackSender.NoSenderFixedLink) {
+            rnu.getLogger().info("No automatic resource pack sending enabled (NoSenderFixedLink).");
+            rnu.getLogger().info("Make sure you are sending the resource link for the players by another way.");
         } else {
             throw new RuntimeException("Loader not supported in this platform: " + rnu.serverConfig().sender().type());
         }
@@ -54,17 +57,17 @@ public class VelocityListener {
 
     @Subscribe
     public void onPlayerJoin(ServerPostConnectEvent event) {
-        if (event.getPreviousServer() == null) {
-            if (rnu.serverConfig().sender() instanceof ResourcePackSender.Delayed) {
-                ResourcePackSender.Delayed delayed = (ResourcePackSender.Delayed) rnu.serverConfig().sender();
-                rnu.scheduler().runLaterAsync(() -> {
-                    Player player = event.getPlayer();
-                    if (!pending.containsKey(player) && rnu.resourcePackState() instanceof ResourcePackState.Loaded) {
-                        ResourcePackState.Loaded loaded = (ResourcePackState.Loaded) rnu.resourcePackState();
-                        addPending(player, loaded.resourcePackInfo());
-                    }
-                }, delayed.sendingDelay());
-            }
+        if (event.getPreviousServer() != null) return;
+
+        if (rnu.serverConfig().sender() instanceof ResourcePackSender.Delayed) {
+            ResourcePackSender.Delayed delayed = (ResourcePackSender.Delayed) rnu.serverConfig().sender();
+            rnu.scheduler().runLaterAsync(() -> {
+                Player player = event.getPlayer();
+                if (!pending.containsKey(player) && rnu.resourcePackState() instanceof ResourcePackState.Loaded) {
+                    ResourcePackState.Loaded loaded = (ResourcePackState.Loaded) rnu.resourcePackState();
+                    addPending(player, loaded.resourcePackInfo());
+                }
+            }, delayed.sendingDelay());
         }
     }
 
@@ -115,6 +118,10 @@ public class VelocityListener {
 
     @Subscribe
     public void onRNUPackLoaded(RNUPackLoadedEvent event) {
+        if (rnu.serverConfig().sender() instanceof ResourcePackSender.NoSenderFixedLink) {
+            return;
+        }
+
         ResourcePackInfo resourcePackInfo = event.getResourcePackInfo();
         for (Player player : rnu.getServer().getAllPlayers()) {
             addPending(player, resourcePackInfo);
