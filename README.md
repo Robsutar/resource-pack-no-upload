@@ -224,6 +224,8 @@ By default, the `Delayed` sender is used, and it works for most cases.
 
 <details>
   <summary><strong>Using the injector on the PaperMC server</strong></summary>
+  NOTE: Experimental feature
+  
   The server config: `plugins/ResourcePackNoUpload/server.yml`
 
 ```yaml
