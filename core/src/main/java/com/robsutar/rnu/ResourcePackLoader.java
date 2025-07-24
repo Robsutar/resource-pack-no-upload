@@ -155,12 +155,22 @@ public interface ResourcePackLoader {
     }
 
     class Download implements ResourcePackLoader {
+        public static String CACHE_SUFFIX = ".Cached.zip";
+
+        private final boolean isCached;
         private final File zipPath;
         private final URL url;
         private final List<Header> headers = new ArrayList<>();
 
         public Download(File tempFolder, Map<String, Object> raw) {
-            this.zipPath = new File(tempFolder, UUID.randomUUID() + ".Download.zip");
+            if (raw.get("cacheName") instanceof String) {
+                String cacheName = (String) raw.get("cacheName");
+                this.isCached = true;
+                this.zipPath = new File(tempFolder, cacheName + CACHE_SUFFIX).getAbsoluteFile();
+            } else {
+                this.isCached = false;
+                this.zipPath = new File(tempFolder, UUID.randomUUID() + ".Download.zip").getAbsoluteFile();
+            }
 
             try {
                 this.url = new URL(OC.str(raw.get("url")));
@@ -215,7 +225,7 @@ public interface ResourcePackLoader {
                 zis.closeEntry();
             }
 
-            if (!zipPath.delete())
+            if (!isCached && !zipPath.delete())
                 throw new IllegalArgumentException("Failed to delete temporary zip file: " + zipPath);
 
             return output;
