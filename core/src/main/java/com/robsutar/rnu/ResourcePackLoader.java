@@ -155,12 +155,22 @@ public interface ResourcePackLoader {
     }
 
     class Download implements ResourcePackLoader {
+        public static String CACHE_SUFFIX = ".Cached.zip";
+
+        private final boolean isCached;
         private final File zipPath;
         private final URL url;
         private final List<Header> headers = new ArrayList<>();
 
         public Download(File tempFolder, Map<String, Object> raw) {
-            this.zipPath = new File(tempFolder, UUID.randomUUID() + ".Download.zip");
+            if (raw.get("cacheName") instanceof String) {
+                String cacheName = (String) raw.get("cacheName");
+                this.isCached = true;
+                this.zipPath = new File(tempFolder, cacheName + CACHE_SUFFIX).getAbsoluteFile();
+            } else {
+                this.isCached = false;
+                this.zipPath = new File(tempFolder, UUID.randomUUID() + ".Download.zip").getAbsoluteFile();
+            }
 
             try {
                 this.url = new URL(OC.str(raw.get("url")));
@@ -180,15 +190,17 @@ public interface ResourcePackLoader {
         public Map<String, Consumer<OutputStream>> appendFiles() throws Exception {
             HashMap<String, Consumer<OutputStream>> output = new HashMap<>();
 
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            for (Header header : headers) {
-                connection.setRequestProperty(header.key, header.value);
-            }
+            if (!isCached || !zipPath.exists()) {
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                for (Header header : headers) {
+                    connection.setRequestProperty(header.key, header.value);
+                }
 
-            try (InputStream inputStream = connection.getInputStream();
-                 ReadableByteChannel rbc = Channels.newChannel(inputStream);
-                 FileOutputStream fos = new FileOutputStream(zipPath)) {
-                fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
+                try (InputStream inputStream = connection.getInputStream();
+                     ReadableByteChannel rbc = Channels.newChannel(inputStream);
+                     FileOutputStream fos = new FileOutputStream(zipPath)) {
+                    fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
+                }
             }
 
             try (ZipInputStream zis = new ZipInputStream(Files.newInputStream(zipPath.toPath()))) {
@@ -215,7 +227,7 @@ public interface ResourcePackLoader {
                 zis.closeEntry();
             }
 
-            if (!zipPath.delete())
+            if (!isCached && !zipPath.delete())
                 throw new IllegalArgumentException("Failed to delete temporary zip file: " + zipPath);
 
             return output;
