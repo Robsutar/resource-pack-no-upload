@@ -190,15 +190,17 @@ public interface ResourcePackLoader {
         public Map<String, Consumer<OutputStream>> appendFiles() throws Exception {
             HashMap<String, Consumer<OutputStream>> output = new HashMap<>();
 
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            for (Header header : headers) {
-                connection.setRequestProperty(header.key, header.value);
-            }
+            if (!isCached || !zipPath.exists()) {
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                for (Header header : headers) {
+                    connection.setRequestProperty(header.key, header.value);
+                }
 
-            try (InputStream inputStream = connection.getInputStream();
-                 ReadableByteChannel rbc = Channels.newChannel(inputStream);
-                 FileOutputStream fos = new FileOutputStream(zipPath)) {
-                fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
+                try (InputStream inputStream = connection.getInputStream();
+                     ReadableByteChannel rbc = Channels.newChannel(inputStream);
+                     FileOutputStream fos = new FileOutputStream(zipPath)) {
+                    fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
+                }
             }
 
             try (ZipInputStream zis = new ZipInputStream(Files.newInputStream(zipPath.toPath()))) {
