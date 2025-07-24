@@ -220,3 +220,22 @@ jobs:
           version: ${{ steps.next_version.outputs.NEXT_VERSION }}
           version-type: release
           changelog: ${{ steps.get-tag-message.outputs.body }}
+
+      - name: README.md loading
+        id: load_readme
+        run: |
+          # Load the root README.md file
+          README_LOADED=$(< README.md)
+          echo "readme_loaded<<EOF" >> $GITHUB_OUTPUT
+          echo "$README_LOADED" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Modrinth long description update
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_CI_VERSIONING_TOKEN }}
+        run: |
+          PAYLOAD=$(printf '%s' "${{ steps.load_readme.outputs.readme_loaded }}" | jq -Rs '{ body: . }')
+          curl -X PATCH "https://api.modrinth.com/v2/project/mdL6k2hy" \
+            -H "Authorization: Bearer ${MODRINTH_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "${PAYLOAD}"
