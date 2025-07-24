@@ -134,10 +134,14 @@ public interface IResourcePackNoUploadInternal {
                 resourcePackState = new ResourcePackState.Loading();
 
                 File tempFolder = new File(rnu.getDataFolder(), "temp");
+                Path tempFolderPath = tempFolder.toPath();
 
-                if (tempFolder.exists()) try (Stream<Path> walk = Files.walk(tempFolder.toPath())) {
+                if (tempFolder.exists()) try (Stream<Path> walk = Files.walk(tempFolderPath)) {
                     walk.sorted(Comparator.reverseOrder())
                             .forEach(path -> {
+                                if (path.equals(tempFolderPath) || path.toString().endsWith(ResourcePackLoader.Download.CACHE_SUFFIX)) {
+                                    return;
+                                }
                                 try {
                                     Files.delete(path);
                                 } catch (IOException e) {
@@ -147,9 +151,7 @@ public interface IResourcePackNoUploadInternal {
                 } catch (Exception e) {
                     throw new ResourcePackLoadException("Failed to delete temp folder.", e);
                 }
-
-                if (!tempFolder.mkdir())
-                    throw new ResourcePackLoadException("Failed to create temp folder.");
+                else if (!tempFolder.mkdir()) throw new ResourcePackLoadException("Failed to create temp folder.");
 
                 Map<String, Object> configRaw;
 
