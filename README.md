@@ -96,6 +96,10 @@ loader:
 ```yaml
   type: Download
 
+  # Optional field, this will cache the download, making sure the download is not
+  # done again as long as this cache file can be found in the tempFolder.
+  cacheName: drive_private_pack # Arbitrary name, will be used to save the file.
+
   # The link for the download.
   url: https://www.googleapis.com/drive/v3/files/FILE_ID?alt=media
 
@@ -225,8 +229,8 @@ By default, the `Delayed` sender is used, and it works for most cases.
 <details>
   <summary><strong>Using the injector on the PaperMC server</strong></summary>
   NOTE: Experimental feature
-  
-  The server config: `plugins/ResourcePackNoUpload/server.yml`
+
+The server config: `plugins/ResourcePackNoUpload/server.yml`
 
 ```yaml
 sender:
