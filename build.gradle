@@ -2,7 +2,7 @@ subprojects {
     apply plugin: 'java'
 
     group = 'com.robsutar.rnu'
-    version = '1.15.0'
+    version = '1.16.0'
 
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
